@@ -1,0 +1,789 @@
+[2J[3J[H[[90m19:01:01[0m] Starting compilation in watch mode...
+
+[[90m19:01:13[0m] Found 0 errors. Watching for file changes.
+
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [NestFactory] Starting Nest application...
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] PrismaModule dependencies initialized +45ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] ConfigHostModule dependencies initialized +19ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] ThrottlerModule dependencies initialized +2ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] ConfigModule dependencies initialized +18ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] ConfigModule dependencies initialized +1ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] HomeCardsModule dependencies initialized +2ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] LicensesModule dependencies initialized +1ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] OrdersModule dependencies initialized +1ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] TelegramModule dependencies initialized +1ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] AffiliatesModule dependencies initialized +1ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] AuthModule dependencies initialized +0ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] InfraModule dependencies initialized +1ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] SettingsModule dependencies initialized +0ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] R2Module dependencies initialized +1ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] ProductsModule dependencies initialized +0ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] SupplierModule dependencies initialized +0ms
+[Nest] 6336  - 05/08/2026, 19:01:16     LOG [InstanceLoader] PaymentsModule dependencies initialized +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RoutesResolver] HealthController {/health}: +574ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/health, GET} route +8ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/health/ready, GET} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RoutesResolver] ProductsController {/products}: +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/products, GET} route +2ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/products/admin/all, GET} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/products/translation/status, GET} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/products/translate, POST} route +2ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/products/:id/pricing, PUT} route +3ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/products/categories, GET} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/products/categories, POST} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/products/:idOrSlug, GET} route +19ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/products, POST} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/products/:id, PUT} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/products/:id, DELETE} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RoutesResolver] SettingsController {/settings}: +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/settings, GET} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/settings, PUT} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RoutesResolver] LicensesController {/licenses}: +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/licenses/:productId/keys, GET} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/licenses/:productId/keys, POST} route +9ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RoutesResolver] PaymentsController {/payments}: +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/payments/mode, GET} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/payments/initialize, POST} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/payments/initialize-cart, POST} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/payments/verify/:txRef, GET} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/payments/mock-confirm/:orderId, POST} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/payments/admin/retry-fulfillment/:orderId, POST} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/payments/webhook, POST} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RoutesResolver] AffiliatesController {/affiliates}: +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/affiliates/join, POST} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/affiliates/stats/:code, GET} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/affiliates/click/:code, POST} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/affiliates/admin/list, GET} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/affiliates/admin/commissions, GET} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/affiliates/admin/commissions/:id/pay, POST} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/affiliates/admin/commissions/:id/cancel, POST} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/affiliates/admin/:id, PUT} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RoutesResolver] TelegramController {/telegram}: +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/telegram/webhook, POST} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RoutesResolver] SupplierController {/supplier}: +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/supplier/status, GET} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/supplier/products, GET} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/supplier/import, POST} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/supplier/sync-stock, POST} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RoutesResolver] OrdersController {/orders}: +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/orders/mine, GET} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/orders/cart/:cartRef, GET} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/orders/admin/stats, GET} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/orders/admin/list, GET} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/orders/:idOrTxRef, GET} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RoutesResolver] AuthController {/auth}: +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/auth/status, GET} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/auth/telegram, POST} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/auth/me, GET} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RoutesResolver] HomeCardsController {/home-cards}: +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/home-cards, GET} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/home-cards/admin, GET} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/home-cards, POST} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/home-cards/:id, PUT} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/home-cards/:id, DELETE} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RoutesResolver] UploadsController {/uploads}: +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/uploads/images, GET} route +0ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [RouterExplorer] Mapped {/uploads/image, POST} route +1ms
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [TelegramService] Telegram bot polling started (getUpdates).
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [FulfillmentQueue] No REDIS_URL — fulfillment runs inline (single-process mode).
+[Nest] 6336  - 05/08/2026, 19:01:17     LOG [NestApplication] Nest application successfully started +10ms
+Backend server running on port 5000
+[Nest] 6336  - 05/08/2026, 19:02:07     LOG [R2Service] Uploaded products/1785945719462-686d3844faaf.png to R2.
+[Nest] 6336  - 05/08/2026, 20:02:45    WARN [TelegramService] Polling error: timeout of 35000ms exceeded
+[2J[3J[H[[90m20:19:35[0m] File change detected. Starting incremental compilation...
+
+[[90m20:19:36[0m] Found 0 errors. Watching for file changes.
+
+[2J[3J[H[[90m20:19:37[0m] File change detected. Starting incremental compilation...
+
+[[90m20:19:38[0m] Found 0 errors. Watching for file changes.
+
+[2J[3J[H[[90m20:19:39[0m] File change detected. Starting incremental compilation...
+
+[[90m20:19:40[0m] Found 0 errors. Watching for file changes.
+
+[2J[3J[H[[90m20:19:41[0m] File change detected. Starting incremental compilation...
+
+[[90m20:19:42[0m] Found 0 errors. Watching for file changes.
+
+[2J[3J[H[[90m20:19:42[0m] File change detected. Starting incremental compilation...
+
+[[90m20:19:43[0m] Found 0 errors. Watching for file changes.
+
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [NestFactory] Starting Nest application...
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] PrismaModule dependencies initialized +24ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] ConfigHostModule dependencies initialized +7ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] ThrottlerModule dependencies initialized +0ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] ConfigModule dependencies initialized +10ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] ConfigModule dependencies initialized +0ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] HomeCardsModule dependencies initialized +1ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] LicensesModule dependencies initialized +1ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] OrdersModule dependencies initialized +0ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] TelegramModule dependencies initialized +1ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] AffiliatesModule dependencies initialized +0ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] AuthModule dependencies initialized +1ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] InfraModule dependencies initialized +1ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] SettingsModule dependencies initialized +0ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] R2Module dependencies initialized +0ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] ProductsModule dependencies initialized +1ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] SupplierModule dependencies initialized +0ms
+[Nest] 1504  - 05/08/2026, 20:19:44     LOG [InstanceLoader] PaymentsModule dependencies initialized +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RoutesResolver] HealthController {/health}: +770ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/health, GET} route +3ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/health/ready, GET} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RoutesResolver] ProductsController {/products}: +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/products, GET} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/products/admin/all, GET} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/products/translation/status, GET} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/products/translate, POST} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/products/:id/pricing, PUT} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/products/categories, GET} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/products/categories, POST} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/products/:idOrSlug, GET} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/products, POST} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/products/:id, PUT} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/products/:id, DELETE} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RoutesResolver] SettingsController {/settings}: +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/settings, GET} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/settings, PUT} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RoutesResolver] LicensesController {/licenses}: +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/licenses/:productId/keys, GET} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/licenses/:productId/keys, POST} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RoutesResolver] PaymentsController {/payments}: +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/payments/mode, GET} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/payments/initialize, POST} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/payments/initialize-cart, POST} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/payments/verify/:txRef, GET} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/payments/mock-confirm/:orderId, POST} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/payments/admin/retry-fulfillment/:orderId, POST} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/payments/webhook, POST} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RoutesResolver] AffiliatesController {/affiliates}: +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/affiliates/join, POST} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/affiliates/stats/:code, GET} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/affiliates/click/:code, POST} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/affiliates/admin/list, GET} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/affiliates/admin/commissions, GET} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/affiliates/admin/commissions/:id/pay, POST} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/affiliates/admin/commissions/:id/cancel, POST} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/affiliates/admin/:id, PUT} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RoutesResolver] TelegramController {/telegram}: +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/telegram/webhook, POST} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RoutesResolver] SupplierController {/supplier}: +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/supplier/status, GET} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/supplier/products, GET} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/supplier/import, POST} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/supplier/sync-stock, POST} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RoutesResolver] OrdersController {/orders}: +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/orders/mine, GET} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/orders/cart/:cartRef, GET} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/orders/admin/stats, GET} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/orders/admin/list, GET} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/orders/:idOrTxRef, GET} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RoutesResolver] AuthController {/auth}: +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/auth/status, GET} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/auth/telegram, POST} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/auth/me, GET} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RoutesResolver] HomeCardsController {/home-cards}: +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/home-cards, GET} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/home-cards/admin, GET} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/home-cards, POST} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/home-cards/:id, PUT} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/home-cards/:id, DELETE} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RoutesResolver] UploadsController {/uploads}: +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/uploads/images, GET} route +0ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/uploads/image, POST} route +1ms
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [TelegramService] Telegram bot polling started (getUpdates).
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [FulfillmentQueue] No REDIS_URL — fulfillment runs inline (single-process mode).
+[Nest] 1504  - 05/08/2026, 20:19:45     LOG [NestApplication] Nest application successfully started +15ms
+Backend server running on port 5000
+[2J[3J[H[[90m20:19:46[0m] File change detected. Starting incremental compilation...
+
+[[90m20:19:46[0m] Found 0 errors. Watching for file changes.
+
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [NestFactory] Starting Nest application...
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] PrismaModule dependencies initialized +17ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] ConfigHostModule dependencies initialized +6ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] ThrottlerModule dependencies initialized +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] ConfigModule dependencies initialized +6ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] ConfigModule dependencies initialized +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] AppModule dependencies initialized +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] HomeCardsModule dependencies initialized +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] LicensesModule dependencies initialized +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] OrdersModule dependencies initialized +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] TelegramModule dependencies initialized +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] AffiliatesModule dependencies initialized +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] AuthModule dependencies initialized +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] InfraModule dependencies initialized +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] SettingsModule dependencies initialized +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] R2Module dependencies initialized +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] ProductsModule dependencies initialized +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] SupplierModule dependencies initialized +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [InstanceLoader] PaymentsModule dependencies initialized +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RoutesResolver] HealthController {/health}: +224ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/health, GET} route +3ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/health/ready, GET} route +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RoutesResolver] ProductsController {/products}: +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/products, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/products/admin/all, GET} route +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/products/translation/status, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/products/translate, POST} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/products/:id/pricing, PUT} route +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/products/categories, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/products/categories, POST} route +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/products/:idOrSlug, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/products, POST} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/products/:id, PUT} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/products/:id, DELETE} route +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RoutesResolver] SettingsController {/settings}: +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/settings, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/settings, PUT} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RoutesResolver] LicensesController {/licenses}: +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/licenses/:productId/keys, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/licenses/:productId/keys, POST} route +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RoutesResolver] PaymentsController {/payments}: +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/payments/mode, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/payments/initialize, POST} route +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/payments/initialize-cart, POST} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/payments/verify/:txRef, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/payments/mock-confirm/:orderId, POST} route +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/payments/admin/retry-fulfillment/:orderId, POST} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/payments/webhook, POST} route +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RoutesResolver] AffiliatesController {/affiliates}: +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/affiliates/join, POST} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/affiliates/stats/:code, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/affiliates/click/:code, POST} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/affiliates/admin/list, GET} route +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/affiliates/admin/commissions, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/affiliates/admin/commissions/:id/pay, POST} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/affiliates/admin/commissions/:id/cancel, POST} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/affiliates/admin/:id, PUT} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RoutesResolver] TelegramController {/telegram}: +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/telegram/webhook, POST} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RoutesResolver] SupplierController {/supplier}: +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/supplier/status, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/supplier/products, GET} route +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/supplier/import, POST} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/supplier/sync-stock, POST} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RoutesResolver] OrdersController {/orders}: +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/orders/mine, GET} route +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/orders/cart/:cartRef, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/orders/admin/stats, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/orders/admin/list, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/orders/:idOrTxRef, GET} route +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RoutesResolver] AuthController {/auth}: +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/auth/status, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/auth/telegram, POST} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/auth/me, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RoutesResolver] HomeCardsController {/home-cards}: +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/home-cards, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/home-cards/admin, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/home-cards, POST} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/home-cards/:id, PUT} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/home-cards/:id, DELETE} route +1ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RoutesResolver] UploadsController {/uploads}: +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/uploads/images, GET} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [RouterExplorer] Mapped {/uploads/image, POST} route +0ms
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [TelegramService] Telegram bot polling started (getUpdates).
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [FulfillmentQueue] No REDIS_URL — fulfillment runs inline (single-process mode).
+[Nest] 12552  - 05/08/2026, 20:19:47     LOG [NestApplication] Nest application successfully started +6ms
+Backend server running on port 5000
+[Nest] 12552  - 05/08/2026, 20:19:50    WARN [TelegramService] Polling error: read ECONNRESET
+[2J[3J[H[[90m20:27:18[0m] File change detected. Starting incremental compilation...
+
+[[90m20:27:21[0m] Found 0 errors. Watching for file changes.
+
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [NestFactory] Starting Nest application...
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] PrismaModule dependencies initialized +16ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] ConfigHostModule dependencies initialized +5ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] ThrottlerModule dependencies initialized +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] ConfigModule dependencies initialized +6ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] ConfigModule dependencies initialized +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] AppModule dependencies initialized +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] HomeCardsModule dependencies initialized +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] LicensesModule dependencies initialized +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] OrdersModule dependencies initialized +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] TelegramModule dependencies initialized +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] AffiliatesModule dependencies initialized +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] AuthModule dependencies initialized +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] InfraModule dependencies initialized +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] SettingsModule dependencies initialized +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] R2Module dependencies initialized +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] ProductsModule dependencies initialized +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] SupplierModule dependencies initialized +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [InstanceLoader] PaymentsModule dependencies initialized +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RoutesResolver] HealthController {/health}: +219ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/health, GET} route +5ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/health/ready, GET} route +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RoutesResolver] ProductsController {/products}: +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/products, GET} route +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/products/admin/all, GET} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/products/translation/status, GET} route +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/products/translate, POST} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/products/:id/pricing, PUT} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/products/categories, GET} route +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/products/categories, POST} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/products/:idOrSlug, GET} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/products, POST} route +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/products/:id, PUT} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/products/:id, DELETE} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RoutesResolver] SettingsController {/settings}: +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/settings, GET} route +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/settings, PUT} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RoutesResolver] LicensesController {/licenses}: +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/licenses/:productId/keys, GET} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/licenses/:productId/keys, POST} route +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RoutesResolver] PaymentsController {/payments}: +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/payments/mode, GET} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/payments/initialize, POST} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/payments/initialize-cart, POST} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/payments/verify/:txRef, GET} route +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/payments/mock-confirm/:orderId, POST} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/payments/admin/retry-fulfillment/:orderId, POST} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/payments/webhook, POST} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RoutesResolver] AffiliatesController {/affiliates}: +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/affiliates/join, POST} route +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/affiliates/stats/:code, GET} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/affiliates/click/:code, POST} route +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/affiliates/admin/list, GET} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/affiliates/admin/commissions, GET} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/affiliates/admin/commissions/:id/pay, POST} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/affiliates/admin/commissions/:id/cancel, POST} route +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/affiliates/admin/:id, PUT} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RoutesResolver] TelegramController {/telegram}: +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/telegram/webhook, POST} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RoutesResolver] SupplierController {/supplier}: +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/supplier/status, GET} route +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/supplier/products, GET} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/supplier/import, POST} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/supplier/sync-stock, POST} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RoutesResolver] OrdersController {/orders}: +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/orders/mine, GET} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/orders/cart/:cartRef, GET} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/orders/admin/stats, GET} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/orders/admin/list, GET} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/orders/:idOrTxRef, GET} route +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RoutesResolver] AuthController {/auth}: +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/auth/status, GET} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/auth/telegram, POST} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/auth/me, GET} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RoutesResolver] HomeCardsController {/home-cards}: +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/home-cards, GET} route +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/home-cards/admin, GET} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/home-cards, POST} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/home-cards/:id, PUT} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/home-cards/:id, DELETE} route +1ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RoutesResolver] UploadsController {/uploads}: +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/uploads/images, GET} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [RouterExplorer] Mapped {/uploads/image, POST} route +0ms
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [TelegramService] Telegram bot polling started (getUpdates).
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [FulfillmentQueue] No REDIS_URL — fulfillment runs inline (single-process mode).
+[Nest] 31996  - 05/08/2026, 20:27:22     LOG [NestApplication] Nest application successfully started +5ms
+Backend server running on port 5000
+dmin/retry-fulfillment/:orderId, POST} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/payments/webhook, POST} route +1ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RoutesResolver] AffiliatesController {/affiliates}: +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/affiliates/join, POST} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/affiliates/stats/:code, GET} route +1ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/affiliates/click/:code, POST} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/affiliates/admin/list, GET} route +1ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/affiliates/admin/commissions, GET} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/affiliates/admin/commissions/:id/pay, POST} route +1ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/affiliates/admin/commissions/:id/cancel, POST} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/affiliates/admin/:id, PUT} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RoutesResolver] TelegramController {/telegram}: +1ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/telegram/webhook, POST} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RoutesResolver] SupplierController {/supplier}: +1ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/supplier/status, GET} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/supplier/products, GET} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/supplier/import, POST} route +1ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/supplier/sync-stock, POST} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RoutesResolver] OrdersController {/orders}: +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/orders/mine, GET} route +1ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/orders/cart/:cartRef, GET} route +1ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/orders/admin/stats, GET} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/orders/admin/list, GET} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/orders/:idOrTxRef, GET} route +1ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RoutesResolver] AuthController {/auth}: +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/auth/status, GET} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/auth/telegram, POST} route +1ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/auth/me, GET} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RoutesResolver] HomeCardsController {/home-cards}: +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/home-cards, GET} route +1ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/home-cards/admin, GET} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/home-cards, POST} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/home-cards/:id, PUT} route +1ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/home-cards/:id, DELETE} route +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RoutesResolver] UploadsController {/uploads}: +0ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/uploads/images, GET} route +1ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/uploads/image, POST} route +1ms
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [TelegramService] Telegram bot polling started (getUpdates).
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [FulfillmentQueue] No REDIS_URL — fulfillment runs inline (single-process mode).
+[Nest] 24244  - 05/08/2026, 20:19:45     LOG [NestApplication] Nest application successfully started +10ms
+[2J[3J[H[[90m20:19:45[0m] File change detected. Starting incremental compilation...
+
+8/2026, 20:19:45     LOG [RouterExplorer] Mapped {/home-cards/:id, PUT} route +0ms
+[Nest] 31296  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/home-cards/:id, DELETE} route +1ms
+[Nest] 31296  - 05/08/2026, 20:19:45     LOG [RoutesResolver] UploadsController {/uploads}: +0ms
+[Nest] 31296  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/uploads/images, GET} route +0ms
+[Nest] 31296  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/uploads/image, POST} route +1ms
+[Nest] 31296  - 05/08/2026, 20:19:45     LOG [TelegramService] Telegram bot polling started (getUpdates).
+[Nest] 31296  - 05/08/2026, 20:19:45     LOG [FulfillmentQueue] No REDIS_URL — fulfillment runs inline (single-process mode).
+[Nest] 31296  - 05/08/2026, 20:19:45     LOG [NestApplication] Nest application successfully started +14ms
+[2J[3J[H[[90m20:19:45[0m] File change detected. Starting incremental compilation...
+
+Mapped {/home-cards/:id, DELETE} route +1ms
+[Nest] 29852  - 05/08/2026, 20:19:45     LOG [RoutesResolver] UploadsController {/uploads}: +0ms
+[Nest] 29852  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/uploads/images, GET} route +1ms
+[Nest] 29852  - 05/08/2026, 20:19:45     LOG [RouterExplorer] Mapped {/uploads/image, POST} route +1ms
+[Nest] 29852  - 05/08/2026, 20:19:45     LOG [TelegramService] Telegram bot polling started (getUpdates).
+[Nest] 29852  - 05/08/2026, 20:19:45     LOG [FulfillmentQueue] No REDIS_URL — fulfillment runs inline (single-process mode).
+[Nest] 29852  - 05/08/2026, 20:19:45     LOG [NestApplication] Nest application successfully started +8ms
+[2J[3J[H[[90m20:19:45[0m] File change detected. Starting incremental compilation...
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          [2J[3J[H[[90m20:19:35[0m] File change detected. Starting incremental compilation...
+
+[96msrc/affiliates/affiliates.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/app.module.ts[0m:[93m2[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigModule } from '@nestjs/config';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/auth/auth.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/infra/redis.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/main.ts[0m:[93m3[0m:[93m40[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/platform-express' or its corresponding type declarations.
+
+[7m3[0m import { NestExpressApplication } from '@nestjs/platform-express';
+[7m [0m [91m                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/payments/fulfillment.queue.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/payments/payments.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/products/translation.service.ts[0m:[93m7[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m7[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/r2/r2.module.ts[0m:[93m2[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigModule } from '@nestjs/config';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/r2/r2.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/r2/uploads.controller.ts[0m:[93m11[0m:[93m33[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/platform-express' or its corresponding type declarations.
+
+[7m11[0m import { FileInterceptor } from '@nestjs/platform-express';
+[7m  [0m [91m                                ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/supplier/supplier.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/telegram/telegram.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[[90m20:19:39[0m] Found 13 errors. Watching for file changes.
+
+[2J[3J[H[[90m20:19:39[0m] File change detected. Starting incremental compilation...
+
+[96msrc/affiliates/affiliates.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/app.module.ts[0m:[93m2[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigModule } from '@nestjs/config';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/auth/auth.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/infra/redis.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/main.ts[0m:[93m3[0m:[93m40[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/platform-express' or its corresponding type declarations.
+
+[7m3[0m import { NestExpressApplication } from '@nestjs/platform-express';
+[7m [0m [91m                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/payments/fulfillment.queue.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/payments/payments.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/products/translation.service.ts[0m:[93m7[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m7[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/r2/r2.module.ts[0m:[93m2[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigModule } from '@nestjs/config';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/r2/r2.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/r2/uploads.controller.ts[0m:[93m11[0m:[93m33[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/platform-express' or its corresponding type declarations.
+
+[7m11[0m import { FileInterceptor } from '@nestjs/platform-express';
+[7m  [0m [91m                                ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/supplier/supplier.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/telegram/telegram.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[[90m20:19:40[0m] Found 13 errors. Watching for file changes.
+
+[2J[3J[H[[90m20:19:41[0m] File change detected. Starting incremental compilation...
+
+[96msrc/affiliates/affiliates.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/app.module.ts[0m:[93m2[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigModule } from '@nestjs/config';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/auth/auth.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/infra/redis.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/main.ts[0m:[93m3[0m:[93m40[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/platform-express' or its corresponding type declarations.
+
+[7m3[0m import { NestExpressApplication } from '@nestjs/platform-express';
+[7m [0m [91m                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/payments/fulfillment.queue.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/payments/payments.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/products/translation.service.ts[0m:[93m7[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m7[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/r2/r2.module.ts[0m:[93m2[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigModule } from '@nestjs/config';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/r2/r2.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/r2/uploads.controller.ts[0m:[93m11[0m:[93m33[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/platform-express' or its corresponding type declarations.
+
+[7m11[0m import { FileInterceptor } from '@nestjs/platform-express';
+[7m  [0m [91m                                ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/supplier/supplier.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/telegram/telegram.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[[90m20:19:41[0m] Found 13 errors. Watching for file changes.
+
+[2J[3J[H[[90m20:19:45[0m] File change detected. Starting incremental compilation...
+
+[96msrc/affiliates/affiliates.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/app.module.ts[0m:[93m2[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigModule } from '@nestjs/config';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/auth/auth.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/infra/redis.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/main.ts[0m:[93m3[0m:[93m40[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/platform-express' or its corresponding type declarations.
+
+[7m3[0m import { NestExpressApplication } from '@nestjs/platform-express';
+[7m [0m [91m                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/payments/fulfillment.queue.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/payments/payments.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/products/translation.service.ts[0m:[93m7[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m7[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/r2/r2.module.ts[0m:[93m2[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigModule } from '@nestjs/config';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/r2/r2.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/r2/uploads.controller.ts[0m:[93m11[0m:[93m33[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/platform-express' or its corresponding type declarations.
+
+[7m11[0m import { FileInterceptor } from '@nestjs/platform-express';
+[7m  [0m [91m                                ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/supplier/supplier.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/telegram/telegram.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[[90m20:19:46[0m] Found 13 errors. Watching for file changes.
+
+[2J[3J[H[[90m20:27:18[0m] File change detected. Starting incremental compilation...
+
+[96msrc/affiliates/affiliates.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/app.module.ts[0m:[93m2[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigModule } from '@nestjs/config';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/auth/auth.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/infra/redis.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/main.ts[0m:[93m3[0m:[93m40[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/platform-express' or its corresponding type declarations.
+
+[7m3[0m import { NestExpressApplication } from '@nestjs/platform-express';
+[7m [0m [91m                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/payments/fulfillment.queue.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/payments/payments.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/products/translation.service.ts[0m:[93m7[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m7[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/r2/r2.module.ts[0m:[93m2[0m:[93m30[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigModule } from '@nestjs/config';
+[7m [0m [91m                             ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/r2/r2.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/r2/uploads.controller.ts[0m:[93m11[0m:[93m33[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/platform-express' or its corresponding type declarations.
+
+[7m11[0m import { FileInterceptor } from '@nestjs/platform-express';
+[7m  [0m [91m                                ~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[96msrc/supplier/supplier.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[96msrc/telegram/telegram.service.ts[0m:[93m2[0m:[93m31[0m - [91merror[0m[90m TS2307: [0mCannot find module '@nestjs/config' or its corresponding type declarations.
+
+[7m2[0m import { ConfigService } from '@nestjs/config';
+[7m [0m [91m                              ~~~~~~~~~~~~~~~~[0m
+
+[[90m20:27:20[0m] Found 13 errors. Watching for file changes.
+

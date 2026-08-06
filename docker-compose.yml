@@ -1,0 +1,44 @@
+# Production data layer for KeyVault Store.
+#   docker compose up -d          → Postgres + Redis with healthchecks
+# Then point backend/.env at them:
+#   DATABASE_URL="postgresql://keyvault:change_me_now@localhost:5432/keyvault"
+#   REDIS_URL="redis://localhost:6379"
+# Change POSTGRES_PASSWORD before any real deployment.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: keyvault
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_now}
+      POSTGRES_DB: keyvault
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U keyvault -d keyvault']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # LRU eviction: cache keys drop first under memory pressure; BullMQ data
+    # lives in Redis too, so persistence (AOF) is on for queue safety.
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru --appendonly yes
+    volumes:
+      - redisdata:/data
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  pgdata:
+  redisdata:

@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   ADMIN THEME — dark is the default. Light mode is activated by
+   the `light` class on <html> (ThemeToggle + inline script in
+   layout.tsx, persisted in localStorage as kv-admin-theme).
+   Custom components below are variable-driven; the Tailwind
+   utility remaps at the bottom adapt hardcoded dark utilities.
+   ============================================================ */
+:root {
+  --bg: #070b14;
+  --line: rgba(148, 163, 184, 0.12);
+  --text-1: #f1f5f9;
+  --input-bg: rgba(7, 11, 20, 0.7);
+  --th-bg: rgba(7, 11, 20, 0.6);
+  --td-text: #cbd5e1;
+  --row-hover: rgba(255, 255, 255, 0.02);
+  --ghost-bg: rgba(255, 255, 255, 0.04);
+  --ghost-hover: rgba(255, 255, 255, 0.08);
+  --scrollbar: #26334d;
+}
+
+body {
+  color: var(--text-1);
+  background: var(--bg);
+  font-family: 'Noto Sans Ethiopic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(600px 300px at 85% -5%, rgba(251, 191, 36, 0.07), transparent 60%),
+    radial-gradient(500px 260px at -10% 30%, rgba(16, 185, 129, 0.05), transparent 60%),
+    var(--bg);
+}
+
+.glass {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.015));
+  border: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 55%, #ea580c 100%);
+  color: #0a0f1c;
+  box-shadow: 0 8px 24px -8px rgba(245, 158, 11, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 0.15s, filter 0.2s;
+}
+.btn-primary:hover:not(:disabled) { filter: brightness(1.06); }
+.btn-primary:active:not(:disabled) { transform: scale(0.97); }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-ghost {
+  background: var(--ghost-bg);
+  border: 1px solid var(--line);
+  transition: background 0.2s, transform 0.15s;
+}
+.btn-ghost:hover { background: var(--ghost-hover); }
+.btn-ghost:active { transform: scale(0.97); }
+
+.btn-success {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  box-shadow: 0 6px 18px -6px rgba(16, 185, 129, 0.5);
+  transition: transform 0.15s, filter 0.2s;
+}
+.btn-success:hover:not(:disabled) { filter: brightness(1.08); }
+.btn-success:active:not(:disabled) { transform: scale(0.97); }
+
+.input-dark {
+  background: var(--input-bg);
+  border: 1px solid var(--line);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-dark:focus {
+  outline: none;
+  border-color: rgba(251, 191, 36, 0.55);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.12);
+}
+
+.text-gradient {
+  background: linear-gradient(90deg, #fde68a, #fbbf24, #fb923c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.table-base th {
+  background: var(--th-bg);
+  color: #64748b;
+  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+.table-base td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--td-text);
+}
+.table-base tr:hover td {
+  background: var(--row-hover);
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 999px; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* ============================================================
+   LIGHT THEME — html.light
+   ============================================================ */
+:root.light {
+  --bg: #eef2f7;
+  --line: rgba(15, 23, 42, 0.1);
+  --text-1: #0f172a;
+  --input-bg: #ffffff;
+  --th-bg: #f1f5f9;
+  --td-text: #334155;
+  --row-hover: rgba(15, 23, 42, 0.04);
+  --ghost-bg: rgba(15, 23, 42, 0.05);
+  --ghost-hover: rgba(15, 23, 42, 0.09);
+  --scrollbar: #cbd5e1;
+}
+
+:root.light .app-bg { background: var(--bg); }
+:root.light .glass {
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+:root.light .text-gradient {
+  background: linear-gradient(90deg, #b45309, #d97706, #ea580c);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* --- Neutral utility remaps (dark utilities -> light-readable) --- */
+:root.light .text-white,
+:root.light .text-slate-100 { color: #0f172a; }
+:root.light .text-slate-200 { color: #1e293b; }
+:root.light .text-slate-300 { color: #334155; }
+:root.light .text-slate-400 { color: #475569; }
+:root.light .text-slate-500 { color: #64748b; }
+:root.light .text-slate-600 { color: #94a3b8; }
+:root.light .hover\:text-white:hover { color: #0f172a; }
+
+:root.light .border-white\/5 { border-color: rgba(15, 23, 42, 0.06); }
+:root.light .border-white\/10 { border-color: rgba(15, 23, 42, 0.1); }
+
+:root.light .bg-white\/5 { background-color: rgba(15, 23, 42, 0.045); }
+:root.light .bg-white\/10 { background-color: rgba(15, 23, 42, 0.08); }
+:root.light .bg-white\/\[0\.02\] { background-color: rgba(15, 23, 42, 0.03); }
+:root.light .bg-white\/\[0\.03\] { background-color: rgba(255, 255, 255, 0.75); }
+:root.light .bg-white\/\[0\.05\] { background-color: rgba(15, 23, 42, 0.05); }
+:root.light .hover\:bg-white\/5:hover { background-color: rgba(15, 23, 42, 0.06); }
+:root.light .hover\:bg-white\/10:hover { background-color: rgba(15, 23, 42, 0.09); }
+:root.light .hover\:bg-white:hover { background-color: #e2e8f0; }
+
+:root.light .bg-slate-900 { background-color: #ffffff; }
+:root.light .bg-slate-500\/15 { background-color: rgba(100, 116, 139, 0.12); }
+
+/* Hardcoded dark surfaces -> light surfaces */
+:root.light .bg-\[\#070b14\] { background-color: #ffffff; }
+:root.light .bg-\[\#070b14\]\/85 { background-color: rgba(255, 255, 255, 0.88); }
+:root.light .bg-\[\#070b14\]\/95 { background-color: rgba(255, 255, 255, 0.96); }
+
+/* --- Accent text remaps (readable on light tinted badges) --- */
+:root.light .text-amber-300 { color: #b45309; }
+:root.light .text-amber-400,
+:root.light .text-amber-400\/80 { color: #d97706; }
+:root.light .text-emerald-300,
+:root.light .text-emerald-400 { color: #047857; }
+:root.light .text-sky-300 { color: #0369a1; }
+:root.light .text-sky-400,
+:root.light .text-sky-400\/90 { color: #0284c7; }
+:root.light .text-rose-300,
+:root.light .text-rose-400 { color: #be123c; }
+:root.light .text-violet-300,
+:root.light .text-violet-400 { color: #6d28d9; }
+:root.light .text-orange-300 { color: #c2410c; }
+:root.light .text-orange-400 { color: #ea580c; }

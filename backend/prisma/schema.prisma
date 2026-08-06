@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  name      String
+  slug      String    @unique
+  icon      String
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Setting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
+model HomeCard {
+  id             String   @id @default(uuid())
+  enabled        Boolean  @default(true)
+  order          Int      @default(0)
+  kind           String   @default("hero") // hero | promo
+  badgeText      String?
+  title          String
+  subtitle       String?
+  icon           String?                   // sparkles | handcoins | zap | shield | package
+  linkType       String   @default("none") // none | product | url
+  productId      String?
+  linkUrl        String?
+  animatedBorder Boolean  @default(false)
+  priceText      String?
+  imageUrl       String?
+  borderStyle    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model TgUser {
+  id           String   @id @default(uuid())
+  telegramId   String   @unique
+  firstName    String?
+  lastName     String?
+  username     String?
+  photoUrl     String?
+  languageCode String?
+  createdAt    DateTime @default(now())
+  lastSeenAt   DateTime @updatedAt
+}
+
+model Product {
+  id               String            @id @default(uuid())
+  name             String
+  slug             String            @unique
+  description      String
+  shortDesc        String
+  price            Float
+  originalPrice    Float?
+  currency         String            @default("ETB")
+  badge            String?
+  bannerUrl        String
+  gallery          String
+  features         String
+  requirements     String
+  translations     String            @default("{}")
+  stock            Int               @default(0)
+  instantDelivery  Boolean           @default(true)
+  isFeatured       Boolean           @default(false)
+  source           String            @default("LOCAL")
+  supplierProductId String?
+  costUSD          Float?
+  priceMode        String            @default("MANUAL")
+  marginMultiplier Float?
+  discountPct      Float             @default(0)
+  categoryId       String
+  category         Category          @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  licenseKeys      LicenseKey[]
+  activationGuide  ActivationGuide?
+  orders           Order[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model LicenseKey {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  code      String
+  isUsed    Boolean  @default(false)
+  orderId   String?
+  createdAt DateTime @default(now())
+}
+
+model ActivationGuide {
+  id          String   @id @default(uuid())
+  productId   String   @unique
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  steps       String
+  downloadUrl String?
+  notes       String?
+  videoUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Affiliate {
+  id               String       @id @default(uuid())
+  code             String       @unique
+  name             String
+  phone            String?
+  email            String?
+  telegramUserId   String?
+  telegramUsername String?
+  status           String       @default("ACTIVE")
+  commissionRate   Float        @default(0.10)
+  clicks           Int          @default(0)
+  payoutMethod     String?
+  payoutAccount    String?
+  orders           Order[]
+  commissions      Commission[]
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model Commission {
+  id          String    @id @default(uuid())
+  affiliateId String
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  orderId     String    @unique
+  amount      Float
+  rate        Float
+  status      String    @default("PENDING")
+  paidAt      DateTime?
+  note        String?
+  createdAt   DateTime  @default(now())
+}
+
+model Order {
+  id                String     @id @default(uuid())
+  txRef             String     @unique
+  cartRef           String?
+  telegramUserId    String?
+  telegramUsername  String?
+  customerEmail     String
+  customerPhone     String?
+  customerName      String
+  productId         String
+  product           Product    @relation(fields: [productId], references: [id])
+  quantity          Int        @default(1)
+  amount            Float
+  currency          String     @default("ETB")
+  status            String     @default("PENDING")
+  licenseKey        String?
+  paymentUrl        String?
+  chapaTxRef        String?
+  paymentMode       String     @default("mock")
+  fulfillmentStatus String     @default("NONE")
+  supplierOrderId   String?
+  fulfillmentError  String?
+  refCode           String?
+  affiliateId       String?
+  affiliate         Affiliate? @relation(fields: [affiliateId], references: [id])
+  commissionAmount  Float?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+}
+
+model AdminUser {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

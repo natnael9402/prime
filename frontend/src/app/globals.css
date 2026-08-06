@@ -1,0 +1,361 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   KEYVAULT THEME — single source of truth.
+
+   Surfaces & text FOLLOW THE USER'S TELEGRAM THEME at runtime
+   (telegram.ts initTelegramThemeSync + inline script in layout.tsx
+   set these variables from WebApp.themeParams and update them on
+   Telegram's themeChanged event). In a plain browser, the dark
+   defaults below apply, with a prefers-color-scheme light preview.
+
+   BRAND is always ELECTRIC GREEN (#00E065).
+   Tailwind `brand-*`, `appbg`, `appsurface`, `apptext-*` classes
+   read these RGB triplets.
+   ============================================================ */
+:root {
+  /* Surfaces (dark defaults = browser fallback) */
+  --bg-rgb: 11 15 20;        /* #0B0F14 */
+  --surface-rgb: 21 26 34;   /* #151A22 */
+  --surface-2-rgb: 27 34 48; /* #1B2230 */
+
+  /* Text */
+  --text-1: 255 255 255;     /* primary */
+  --text-2: 156 163 175;     /* #9CA3AF secondary */
+  --text-3: 107 114 128;     /* #6B7280 muted */
+
+  /* PRIMARY BRAND — ELECTRIC GREEN */
+  --brand-300: 125 255 176;  /* #7DFFB0 light highlight */
+  --brand-400: 45 255 141;   /* #2DFF8D bright */
+  --brand-500: 0 224 101;    /* #00E065 ELECTRIC GREEN PRIMARY */
+  --brand-600: 0 176 79;     /* #00B04F gradient end */
+
+  /* ACCENT (subtle glow in the ambient background) */
+  --accent-400: 251 191 36;
+  --accent-500: 45 212 191;
+
+  --line: rgb(var(--text-1) / 0.09);
+}
+
+/* Browser-only light preview — Telegram params override via inline vars */
+@media (prefers-color-scheme: light) {
+  :root:not([data-tg-scheme]) {
+    --bg-rgb: 244 245 247;
+    --surface-rgb: 255 255 255;
+    --surface-2-rgb: 255 255 255;
+    --text-1: 17 24 39;
+    --text-2: 107 114 128;
+    --text-3: 156 163 175;
+  }
+}
+
+/* ============================================================
+   LIGHT MODE BRAND — the electric greens are dark-theme colors
+   and are unreadable on light surfaces. In light mode (browser
+   preview OR Telegram light theme via data-tg-scheme) shift the
+   brand scale darker so green text/icons keep >= ~4:1 contrast.
+   Dark mode is untouched.
+   ============================================================ */
+@media (prefers-color-scheme: light) {
+  :root:not([data-tg-scheme]) {
+    --brand-300: 4 122 56;   /* #047A38 readable green text */
+    --brand-400: 0 148 68;   /* #009444 icons / bold labels */
+    --brand-500: 0 176 79;   /* #00B04F primary buttons */
+    --brand-600: 0 128 58;   /* #00803A gradient end */
+  }
+}
+:root[data-tg-scheme='light'] {
+  --brand-300: 4 122 56;
+  --brand-400: 0 148 68;
+  --brand-500: 0 176 79;
+  --brand-600: 0 128 58;
+}
+
+/* Tailwind's fixed emerald text palette is also unreadable on
+   light surfaces — remap the text utilities used in the app. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-tg-scheme]) .text-emerald-300,
+  :root:not([data-tg-scheme]) .text-emerald-400,
+  :root:not([data-tg-scheme]) .text-emerald-300\/90 { color: rgb(4 120 87); }
+  :root:not([data-tg-scheme]) .group:hover .group-hover\:text-emerald-200 { color: rgb(4 120 87); }
+}
+:root[data-tg-scheme='light'] .text-emerald-300,
+:root[data-tg-scheme='light'] .text-emerald-400,
+:root[data-tg-scheme='light'] .text-emerald-300\/90 { color: rgb(4 120 87); }
+:root[data-tg-scheme='light'] .group:hover .group-hover\:text-emerald-200 { color: rgb(4 120 87); }
+
+/* ============================================================
+   APP VIEWPORT — mobile-first, app-like.
+   The browser/body NEVER scrolls: the page is locked to the
+   device viewport and each screen scrolls internally through
+   `.app-scroll`, with invisible scrollbars and no bounce.
+   ============================================================ */
+html,
+body {
+  height: 100%;
+  min-height: 100%;
+  overscroll-behavior: none;
+}
+
+html {
+  scroll-behavior: auto;
+}
+
+body {
+  color: rgb(var(--text-1));
+  background: rgb(var(--bg-rgb));
+  font-family: 'Noto Sans Ethiopic', 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  height: 100dvh;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Full-viewport screen shell — never scrolls itself */
+.app-shell {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+/* Internal app-style scrolling area (invisible scrollbar, no bounce) */
+.app-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.app-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Clear the fixed BottomNav on mobile inside scroll areas */
+.pb-app-nav {
+  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom));
+}
+@media (min-width: 768px) {
+  .pb-app-nav {
+    padding-bottom: 2.5rem;
+  }
+}
+
+/* Ambient background glows removed — pages use one flat uniform
+   background (same tone as the navbar) for a clean app look. */
+
+.glass {
+  background: rgb(var(--surface-rgb) / 0.78);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(14px);
+}
+
+.card-hover {
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.2s, box-shadow 0.25s;
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  border-color: rgb(var(--brand-400) / 0.35);
+  box-shadow: 0 16px 40px -18px rgb(var(--brand-400) / 0.25);
+}
+.card-hover:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, rgb(var(--brand-400)) 0%, rgb(var(--brand-500)) 55%, rgb(var(--brand-600)) 100%);
+  color: #04120a;
+  box-shadow: 0 8px 24px -8px rgb(var(--brand-500) / 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 0.15s, filter 0.2s, box-shadow 0.2s;
+}
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.06);
+  box-shadow: 0 10px 28px -8px rgb(var(--brand-500) / 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: rgb(var(--text-1) / 0.05);
+  border: 1px solid var(--line);
+  color: rgb(var(--text-1));
+  transition: background 0.2s, transform 0.15s;
+}
+.btn-ghost:hover { background: rgb(var(--text-1) / 0.09); }
+.btn-ghost:active { transform: scale(0.97); }
+
+.text-gradient {
+  background: linear-gradient(90deg, rgb(var(--brand-300)), rgb(var(--brand-400)), rgb(var(--brand-600)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.input-dark {
+  background: rgb(var(--bg-rgb) / 0.75);
+  border: 1px solid var(--line);
+  color: rgb(var(--text-1));
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-dark:focus {
+  outline: none;
+  border-color: rgb(var(--brand-400) / 0.55);
+  box-shadow: 0 0 0 3px rgb(var(--brand-400) / 0.12);
+}
+
+.pill {
+  transition: all 0.2s;
+}
+.pill-active {
+  background: linear-gradient(135deg, rgb(var(--brand-400)), rgb(var(--brand-500)));
+  color: #04120a;
+  border-color: transparent;
+  box-shadow: 0 6px 18px -6px rgb(var(--brand-500) / 0.5);
+}
+
+.scrollbar-none::-webkit-scrollbar { display: none; }
+.scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ============================================================
+   GEMINI-STYLE CIRCULATING BORDER — a bright point travels the
+   card perimeter in the Gemini spark colors (Google blue -> red
+   -> yellow -> green). Uneven keyframes make the sweep burst fast,
+   then crawl slow, forever — like the logo's living shimmer.
+   Toggle per card from the admin (animatedBorder).
+   ============================================================ */
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+.border-circulate {
+  position: relative;
+}
+.border-circulate::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 4.5px;
+  background: conic-gradient(
+    from var(--angle),
+    transparent 0%,
+    #4285f4 5%,
+    #9b72cb 9%,
+    #ea4335 13%,
+    #fbbc05 17%,
+    #34a853 21%,
+    transparent 28%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: border-angle-rotate 7s linear infinite;
+  pointer-events: none;
+  z-index: 2; /* stay above gemini-card grain/content so the ring never gets covered */
+}
+/* Fast burst -> slow crawl -> medium -> slow settle, looped */
+@keyframes border-angle-rotate {
+  0%   { --angle: 0deg; }
+  22%  { --angle: 230deg; }  /* fast: 230deg in 22% of the loop */
+  46%  { --angle: 262deg; }  /* slow crawl */
+  68%  { --angle: 335deg; }  /* medium pickup */
+  100% { --angle: 360deg; }  /* gentle settle back to start */
+}
+
+/* ============================================================
+   BLUE CIRCULATING BORDER — same living sweep in Coursera blues:
+   deep brand blue -> bright azure -> icy glint -> white spark.
+   ============================================================ */
+.border-circulate-blue {
+  position: relative;
+}
+.border-circulate-blue::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 4.5px;
+  background: conic-gradient(
+    from var(--angle),
+    transparent 0%,
+    #0056d2 5%,
+    #2f7ff0 9%,
+    #6fb1ff 13%,
+    #b3d7ff 17%,
+    #ffffff 19%,
+    transparent 28%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: border-angle-rotate 7s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ============================================================
+   GEMINI CARD — light-gray "noisy" surface (Google #e8eaed) with a
+   fine grain overlay. Stays light in both themes so the Gemini
+   spark colors always pop. Text colors are set in JSX.
+   ============================================================ */
+.gemini-card {
+  position: relative;
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgb(66 133 244 / 0.16), transparent 55%),
+    radial-gradient(110% 80% at 100% 0%, rgb(154 114 203 / 0.18), transparent 55%),
+    radial-gradient(90% 90% at 100% 100%, rgb(52 168 83 / 0.14), transparent 55%),
+    radial-gradient(100% 80% at 0% 100%, rgb(251 188 5 / 0.12), transparent 55%),
+    #e8eaed !important;
+  border-color: transparent !important;
+  box-shadow: 0 10px 30px -18px rgb(32 33 36 / 0.35);
+  overflow: hidden;
+}
+.gemini-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: url('/noise.png');
+  background-repeat: repeat;
+  opacity: 0.55;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  z-index: 0;
+}
+/* Keep card content above the grain overlay */
+.gemini-card > * {
+  position: relative;
+  z-index: 1;
+}
+/* …but don't strip absolute positioning from floating children (logo, chips) */
+.gemini-card > .absolute {
+  position: absolute;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgb(var(--text-1) / 0.18); border-radius: 999px; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fadeUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, rgb(var(--text-1) / 0.04) 25%, rgb(var(--text-1) / 0.09) 50%, rgb(var(--text-1) / 0.04) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
