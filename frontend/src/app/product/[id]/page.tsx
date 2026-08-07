@@ -15,6 +15,7 @@ import {
 import { addToCart } from '@/lib/cart';
 import { useLang, useT } from '@/lib/i18n';
 import { localizedProductContent } from '@/lib/productContent';
+import PaymentLogos from '@/components/PaymentLogos';
 import Loading from '@/app/loading';
 
 export default function ProductDetailPage() {
@@ -284,10 +285,7 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              <div className="flex items-center gap-2 text-[10px] text-apptext-3 font-semibold">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>{t.paymentMethods}</span>
-              </div>
+              <PaymentLogos />
 
               {payError && (
                 <div className="px-3 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 text-[11px] font-semibold leading-snug">
@@ -463,10 +461,7 @@ export default function ProductDetailPage() {
               </div>
 
               <div className="pt-3 border-t border-apptext/5 space-y-1.5 text-[10px] text-apptext-3 font-semibold">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span>{t.paymentMethods}</span>
-                </div>
+                <PaymentLogos />
                 <div className="flex items-center gap-2">
                   <Zap className="w-3.5 h-3.5 text-brand-400 shrink-0" />
                   <span>{t.instantKeyHint}</span>
