@@ -1,0 +1,16 @@
+# Store frontend (Next.js) on Firebase App Hosting
+runConfig:
+  minInstances: 0
+  maxInstances: 1
+  memoryMiB: 512
+
+env:
+  - variable: NEXT_PUBLIC_API_URL
+    value: https://keyvault-api--shop-6f7c1.europe-west4.hosted.app
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_STORE_NAME
+    value: KeyVault Store
+    availability: [BUILD, RUNTIME]
+  - variable: NEXT_PUBLIC_SUPPORT_URL
+    secret: NEXT_PUBLIC_SUPPORT_URL
+    availability: [BUILD, RUNTIME]

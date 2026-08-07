@@ -25,3 +25,6 @@ Thumbs.db
 # Backups / artifacts
 *.tgz
 *.tar.gz
+
+# SSH keys
+*.pem

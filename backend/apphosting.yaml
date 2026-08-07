@@ -1,0 +1,91 @@
+# NestJS API on Firebase App Hosting (Node.js buildpack fallback)
+runConfig:
+  minInstances: 0
+  maxInstances: 1
+  memoryMiB: 512
+  concurrency: 80
+
+env:
+  - variable: NODE_ENV
+    value: production
+    availability: [RUNTIME]
+  # URLs (public, non-secret)
+  - variable: FRONTEND_URL
+    value: https://keyvault-store--shop-6f7c1.europe-west4.hosted.app
+    availability: [RUNTIME]
+  - variable: TELEGRAM_WEBAPP_URL
+    value: https://keyvault-store--shop-6f7c1.europe-west4.hosted.app
+    availability: [RUNTIME]
+  - variable: BACKEND_PUBLIC_URL
+    value: https://keyvault-api--shop-6f7c1.europe-west4.hosted.app
+    availability: [RUNTIME]
+  # Secrets (stored in Google Secret Manager)
+  - variable: DATABASE_URL
+    secret: DATABASE_URL
+    availability: [RUNTIME]
+  - variable: REDIS_URL
+    secret: REDIS_URL
+    availability: [RUNTIME]
+  - variable: JWT_SECRET
+    secret: JWT_SECRET
+    availability: [RUNTIME]
+  - variable: CHAPA_PUBLIC_KEY
+    secret: CHAPA_PUBLIC_KEY
+    availability: [RUNTIME]
+  - variable: CHAPA_SECRET_KEY
+    secret: CHAPA_SECRET_KEY
+    availability: [RUNTIME]
+  - variable: CHAPA_WEBHOOK_SECRET
+    secret: CHAPA_WEBHOOK_SECRET
+    availability: [RUNTIME]
+  - variable: CHAPA_API_URL
+    secret: CHAPA_API_URL
+    availability: [RUNTIME]
+  - variable: PAYMENT_MODE
+    secret: PAYMENT_MODE
+    availability: [RUNTIME]
+  - variable: TELEGRAM_BOT_TOKEN
+    secret: TELEGRAM_BOT_TOKEN
+    availability: [RUNTIME]
+  - variable: TELEGRAM_BOT_USERNAME
+    secret: TELEGRAM_BOT_USERNAME
+    availability: [RUNTIME]
+  - variable: TELEGRAM_ADMIN_CHAT_ID
+    secret: TELEGRAM_ADMIN_CHAT_ID
+    availability: [RUNTIME]
+  - variable: TELEGRAM_ENABLE_BOT
+    secret: TELEGRAM_ENABLE_BOT
+    availability: [RUNTIME]
+  - variable: SUPPLIER_BASE_URL
+    secret: SUPPLIER_BASE_URL
+    availability: [RUNTIME]
+  - variable: SUPPLIER_API_KEY
+    secret: SUPPLIER_API_KEY
+    availability: [RUNTIME]
+  - variable: QUEUE_WORKER_ENABLED
+    secret: QUEUE_WORKER_ENABLED
+    availability: [RUNTIME]
+  - variable: DEEPSEEK_API_KEY
+    secret: DEEPSEEK_API_KEY
+    availability: [RUNTIME]
+  - variable: DEEPSEEK_API_BASE_URL
+    secret: DEEPSEEK_API_BASE_URL
+    availability: [RUNTIME]
+  - variable: DEEPSEEK_DEFAULT_MODEL
+    secret: DEEPSEEK_DEFAULT_MODEL
+    availability: [RUNTIME]
+  - variable: CLOUDFLARE_R2_ACCOUNT_ID
+    secret: CLOUDFLARE_R2_ACCOUNT_ID
+    availability: [RUNTIME]
+  - variable: CLOUDFLARE_R2_ACCESS_KEY_ID
+    secret: CLOUDFLARE_R2_ACCESS_KEY_ID
+    availability: [RUNTIME]
+  - variable: CLOUDFLARE_R2_SECRET_ACCESS_KEY
+    secret: CLOUDFLARE_R2_SECRET_ACCESS_KEY
+    availability: [RUNTIME]
+  - variable: CLOUDFLARE_R2_BUCKET_NAME
+    secret: CLOUDFLARE_R2_BUCKET_NAME
+    availability: [RUNTIME]
+  - variable: CLOUDFLARE_R2_PUBLIC_URL
+    secret: CLOUDFLARE_R2_PUBLIC_URL
+    availability: [RUNTIME]
