@@ -31,20 +31,20 @@ export class FulfillmentQueue implements OnModuleInit, OnModuleDestroy {
   }
 
   onModuleInit() {
-    const connection = this.redis.connection;
+    const connection = this.redis.bullmqConnection;
     if (!connection) {
       this.logger.log('No REDIS_URL — fulfillment runs inline (single-process mode).');
       return;
     }
 
-    this.queue = new Queue(QUEUE_NAME, { connection });
+    this.queue = new Queue(QUEUE_NAME, { connection: connection as any });
 
     const workerEnabled = (this.config.get<string>('QUEUE_WORKER_ENABLED') || 'true') !== 'false';
     if (workerEnabled) {
       this.worker = new Worker(
         QUEUE_NAME,
         async (job: Job<{ orderId: string }>) => this.process(job),
-        { connection, concurrency: 5 },
+        { connection: connection as any, concurrency: 5 },
       );
       this.worker.on('failed', (job, err) =>
         this.logger.warn(`Fulfillment job ${job?.id} attempt ${job?.attemptsMade} failed: ${err?.message}`),

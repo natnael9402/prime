@@ -45,6 +45,26 @@ export class RedisService implements OnModuleDestroy {
     return this.client;
   }
 
+  /**
+   * Dedicated connection options for BullMQ. Workers need blocking commands,
+   * which ioredis only allows with maxRetriesPerRequest: null — so BullMQ
+   * gets its own connection instead of sharing the cache client.
+   */
+  get bullmqConnection(): Record<string, unknown> | null {
+    const url = (this.config.get<string>('REDIS_URL') || '').trim();
+    if (!url) return null;
+    const u = new URL(url);
+    return {
+      host: u.hostname,
+      port: Number(u.port || 6379),
+      username: u.username || undefined,
+      password: u.password || undefined,
+      db: u.pathname ? Number(u.pathname.slice(1)) || 0 : 0,
+      maxRetriesPerRequest: null,
+      enableReadyCheck: false,
+    };
+  }
+
   async get(key: string): Promise<string | null> {
     if (this.enabled) {
       try {
