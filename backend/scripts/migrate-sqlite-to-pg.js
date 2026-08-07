@@ -23,6 +23,7 @@ if (!PG_URL || !PG_URL.startsWith('postgres')) {
 const TABLES = [
   { model: 'category', table: 'Category', cols: ['id', 'name', 'slug', 'icon', 'createdAt', 'updatedAt'] },
   { model: 'setting', table: 'Setting', cols: ['id', 'key', 'value', 'updatedAt'] },
+  { model: 'adminUser', table: 'AdminUser', cols: ['id', 'email', 'passwordHash', 'name', 'createdAt', 'updatedAt'] },
   { model: 'tgUser', table: 'TgUser', cols: ['id', 'telegramId', 'firstName', 'lastName', 'username', 'photoUrl', 'languageCode', 'createdAt', 'lastSeenAt'] },
   { model: 'product', table: 'Product', cols: ['id', 'name', 'slug', 'description', 'shortDesc', 'price', 'originalPrice', 'currency', 'badge', 'bannerUrl', 'gallery', 'features', 'requirements', 'stock', 'instantDelivery', 'isFeatured', 'source', 'supplierProductId', 'costUSD', 'priceMode', 'marginMultiplier', 'discountPct', 'categoryId', 'createdAt', 'updatedAt'] },
   { model: 'licenseKey', table: 'LicenseKey', cols: ['id', 'productId', 'code', 'isUsed', 'orderId', 'createdAt'] },
