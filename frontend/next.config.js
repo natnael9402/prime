@@ -6,8 +6,6 @@ const nextConfig = {
   output: 'standalone',
   poweredByHeader: false,
   compress: true,
-  // Dev server is reached through the Cloudflare tunnel (shop.careerlyft.ai).
-  allowedDevOrigins: ['shop.careerlyft.ai'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'images.unsplash.com' },

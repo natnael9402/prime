@@ -161,3 +161,23 @@ model AdminUser {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
+
+model HomeCard {
+  id             String   @id @default(uuid())
+  enabled        Boolean  @default(true)
+  order          Int      @default(0)
+  kind           String   @default("hero")
+  badgeText      String?
+  title          String
+  subtitle       String?
+  icon           String?
+  linkType       String   @default("none")
+  productId      String?
+  linkUrl        String?
+  animatedBorder Boolean  @default(false)
+  priceText      String?
+  imageUrl       String?
+  borderStyle    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
