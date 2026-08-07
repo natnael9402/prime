@@ -59,7 +59,7 @@ services:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:-http://187.127.92.55:6003}
+        NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:-https://api.187.127.92.55.sslip.io}
     restart: unless-stopped
     ports:
       - '6001:3000'
@@ -70,7 +70,7 @@ services:
     build:
       context: ./admin
       args:
-        NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:-http://187.127.92.55:6003}
+        NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL:-https://api.187.127.92.55.sslip.io}
     restart: unless-stopped
     ports:
       - '6002:3001'
