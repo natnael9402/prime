@@ -261,7 +261,12 @@ export class PaymentsService {
         timeout: 15000,
       });
 
-      if (response.data?.status === 'success') {
+      // CRITICAL: outer "status" only means the API call succeeded.
+      // The actual payment state lives in data.status — settle ONLY when
+      // Chapa confirms the charge itself is successful. Anything else
+      // (pending / failed / not initialized) must NEVER settle an order.
+      const chargeStatus = response.data?.data?.status;
+      if (response.data?.status === 'success' && chargeStatus === 'success') {
         const settled = await this.settleCart(orders[0].cartRef || orders[0].txRef);
         return this.formatCartResponse(settled, ref);
       }
