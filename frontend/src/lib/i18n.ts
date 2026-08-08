@@ -58,6 +58,7 @@ const en = {
   payNow: 'Pay now',
   connecting: 'Connecting…',
   back: 'Back',
+  next: 'Next',
   share: 'Share',
   total: 'Total',
 
@@ -195,6 +196,7 @@ const am: Dict = {
   payNow: 'ይክፈሉ',
   connecting: 'በመገናኘት ላይ…',
   back: 'ተመለስ',
+  next: 'ቀጣይ',
   share: 'አጋራ',
   total: 'ዋጋ',
 

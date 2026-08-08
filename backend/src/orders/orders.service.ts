@@ -46,23 +46,30 @@ export class OrdersService {
     };
   }
 
-  async findAll(status?: string) {
+  async findAll(status?: string, page = 1, limit = 20) {
     const where: any = {};
     if (status && status !== 'all') {
       where.status = status.toUpperCase();
     }
 
-    const orders = await this.prisma.order.findMany({
-      where,
-      include: {
-        product: {
-          select: { id: true, name: true, price: true, currency: true, bannerUrl: true },
+    const take = Math.min(Math.max(limit, 1), 100);
+    const currentPage = Math.max(page, 1);
+    const [orders, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        include: {
+          product: {
+            select: { id: true, name: true, price: true, currency: true, bannerUrl: true },
+          },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip: (currentPage - 1) * take,
+        take,
+      }),
+      this.prisma.order.count({ where }),
+    ]);
 
-    return orders;
+    return { orders, total, page: currentPage, totalPages: Math.max(Math.ceil(total / take), 1) };
   }
 
   async findByCart(cartRef: string) {
@@ -95,24 +102,30 @@ export class OrdersService {
     }));
   }
 
-  async findMine(params: { telegramUserId?: string; email?: string }) {
+  async findMine(params: { telegramUserId?: string; email?: string; page?: number; limit?: number }) {
     const where: any = { OR: [] };
     if (params.telegramUserId) where.OR.push({ telegramUserId: params.telegramUserId });
     if (params.email) where.OR.push({ customerEmail: params.email });
-    if (where.OR.length === 0) return [];
+    if (where.OR.length === 0) return { orders: [], total: 0, page: 1, totalPages: 1 };
 
-    const orders = await this.prisma.order.findMany({
-      where,
-      include: {
-        product: {
-          select: { id: true, name: true, price: true, currency: true, bannerUrl: true },
+    const take = Math.min(Math.max(params.limit || 10, 1), 50);
+    const currentPage = Math.max(params.page || 1, 1);
+    const [orders, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        include: {
+          product: {
+            select: { id: true, name: true, price: true, currency: true, bannerUrl: true },
+          },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 50,
-    });
+        orderBy: { createdAt: 'desc' },
+        skip: (currentPage - 1) * take,
+        take,
+      }),
+      this.prisma.order.count({ where }),
+    ]);
 
-    return orders;
+    return { orders, total, page: currentPage, totalPages: Math.max(Math.ceil(total / take), 1) };
   }
 
   async getAdminStats() {

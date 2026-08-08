@@ -58,8 +58,8 @@ export const api = {
     const res = await client.get('/orders/admin/stats');
     return res.data;
   },
-  getAdminOrders: async (status?: string) => {
-    const res = await client.get('/orders/admin/list', { params: { status } });
+  getAdminOrders: async (status?: string, page = 1, limit = 20) => {
+    const res = await client.get('/orders/admin/list', { params: { status, page, limit } });
     return res.data;
   },
 

@@ -9,18 +9,27 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
   const [retrying, setRetrying] = useState<string | null>(null);
 
   useEffect(() => {
     loadOrders();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, page]);
+
+  useEffect(() => {
+    setPage(1); // reset to first page when the filter changes
   }, [filter]);
 
   const loadOrders = async () => {
     try {
       setLoading(true);
-      const data = await api.getAdminOrders(filter);
-      setOrders(data);
+      const data = await api.getAdminOrders(filter, page, 20);
+      setOrders(data.orders || []);
+      setTotal(data.total || 0);
+      setTotalPages(data.totalPages || 1);
     } catch (err) {
       console.error(err);
     } finally {
@@ -169,6 +178,31 @@ export default function AdminOrdersPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-white/5">
+                <span className="text-[10px] text-slate-500 font-semibold">
+                  {total} orders · page {page} of {totalPages}
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setPage((p) => Math.max(p - 1, 1))}
+                    disabled={page <= 1}
+                    className="btn-ghost px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-300 disabled:opacity-40"
+                  >
+                    ← Prev
+                  </button>
+                  <button
+                    onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+                    disabled={page >= totalPages}
+                    className="btn-ghost px-3 py-1.5 rounded-lg text-[10px] font-bold text-slate-300 disabled:opacity-40"
+                  >
+                    Next →
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </main>

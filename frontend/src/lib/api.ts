@@ -80,7 +80,7 @@ export const api = {
     const res = await client.get(`/orders/${idOrTxRef}`);
     return res.data;
   },
-  getMyOrders: async (params: { telegramUserId?: string; email?: string }) => {
+  getMyOrders: async (params: { telegramUserId?: string; email?: string; page?: number; limit?: number }) => {
     const res = await client.get('/orders/mine', { params });
     return res.data;
   },
