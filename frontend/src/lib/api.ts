@@ -110,6 +110,10 @@ export const api = {
     const res = await client.get('/affiliates/share-link', { params: { code, productId } });
     return res.data as { link: string };
   },
+  requestPayout: async (payload: { code: string; method: string; account: string }) => {
+    const res = await client.post('/affiliates/payout', payload);
+    return res.data;
+  },
 
   // Home cards (admin-driven hero/promo blocks)
   getHomeCards: async () => {

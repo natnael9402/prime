@@ -139,6 +139,18 @@ export const api = {
     const res = await client.put(`/affiliates/admin/${id}`, dto);
     return res.data;
   },
+  getAdminPayouts: async (status?: string) => {
+    const res = await client.get('/affiliates/admin/payouts', { params: { status } });
+    return res.data;
+  },
+  payPayout: async (id: string) => {
+    const res = await client.post(`/affiliates/admin/payouts/${id}/pay`);
+    return res.data;
+  },
+  rejectPayout: async (id: string) => {
+    const res = await client.post(`/affiliates/admin/payouts/${id}/reject`);
+    return res.data;
+  },
 
   // Payment mode
   getPaymentMode: async () => {

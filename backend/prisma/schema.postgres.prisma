@@ -105,6 +105,7 @@ model Affiliate {
   payoutMethod     String?
   payoutAccount    String?
   orders           Order[]
+  payoutRequests   PayoutRequest[]
   commissions      Commission[]
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
@@ -180,4 +181,17 @@ model HomeCard {
   borderStyle    String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+}
+
+model PayoutRequest {
+  id          String    @id @default(uuid())
+  affiliateId String
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  amount      Float
+  method      String // telebirr | cbe
+  account     String
+  status      String    @default("PENDING") // PENDING | PAID | REJECTED
+  note        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }

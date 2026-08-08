@@ -3,10 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import BottomNav from '@/components/BottomNav';
+import PayoutModal from '@/components/PayoutModal';
 import { api } from '@/lib/api';
 import {
   HandCoins, Copy, Check, Share2, Rocket, RefreshCw, BadgeCheck,
-  ArrowUpRight, Clock, Wallet,
+  ArrowUpRight, Clock, Wallet, Banknote,
 } from 'lucide-react';
 import {
   triggerHaptic, getTelegramUser, getAffiliateCode, storeAffiliateCode, shareToTelegram,
@@ -21,6 +22,7 @@ export default function AffiliatePage() {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const [hasTelegram, setHasTelegram] = useState(true);
+  const [payoutOpen, setPayoutOpen] = useState(false);
 
   useEffect(() => {
     setHasTelegram(!!getTelegramUser());
@@ -138,6 +140,23 @@ export default function AffiliatePage() {
             </div>
           </div>
 
+          {/* Request payout — visible once there are pending earnings */}
+          {stats.pending > 0 && (
+            <div className="fade-up py-4 border-b border-apptext/10" style={{ animationDelay: '60ms' }}>
+              <button
+                onClick={() => {
+                  triggerHaptic('medium');
+                  setPayoutOpen(true);
+                }}
+                className="btn-primary w-full py-3.5 rounded-2xl text-sm font-black flex items-center justify-center gap-2"
+              >
+                <Banknote className="w-4 h-4" />
+                {t.requestPayout}
+                <span className="text-[11px] opacity-80">· {stats.pending.toLocaleString()} ETB</span>
+              </button>
+            </div>
+          )}
+
           {/* Stats strip — numbers with dividers, no boxes */}
           <div className="fade-up grid grid-cols-4 py-4 border-b border-apptext/10" style={{ animationDelay: '80ms' }}>
             {[
@@ -237,6 +256,13 @@ export default function AffiliatePage() {
           </div>
         </main>
         <BottomNav />
+        <PayoutModal
+          open={payoutOpen}
+          onClose={() => setPayoutOpen(false)}
+          code={stats.code}
+          pendingAmount={stats.pending}
+          onSuccess={() => loadStats(stats.code)}
+        />
       </div>
     );
   }

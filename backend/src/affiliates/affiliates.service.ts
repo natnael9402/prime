@@ -341,4 +341,88 @@ export class AffiliatesService {
     if (dto.payoutAccount !== undefined) data.payoutAccount = dto.payoutAccount;
     return this.prisma.affiliate.update({ where: { id }, data });
   }
+
+  // ---------- Payout requests ----------
+
+  /** Affiliate requests a payout of all their PENDING commissions. */
+  async requestPayout(dto: { code: string; method: string; account: string }) {
+    const affiliate = await this.prisma.affiliate.findUnique({
+      where: { code: dto.code },
+      include: { commissions: { where: { status: 'PENDING' } } },
+    });
+    if (!affiliate) throw new NotFoundException('Affiliate not found');
+    if (affiliate.status !== 'ACTIVE') {
+      throw new BadRequestException('Affiliate account is not active');
+    }
+
+    const method = (dto.method || '').toLowerCase();
+    const account = (dto.account || '').replace(/[\s-]/g, '');
+    if (method === 'telebirr') {
+      if (!/^(?:\+?251)?0?9\d{8}$/.test(account)) {
+        throw new BadRequestException('Enter a valid Telebirr phone number (09…)');
+      }
+    } else if (method === 'cbe') {
+      if (!/^\d{8,20}$/.test(account)) {
+        throw new BadRequestException('Enter a valid CBE account number');
+      }
+    } else {
+      throw new BadRequestException('Choose Telebirr or CBE Birr');
+    }
+
+    const pending = affiliate.commissions.reduce((s, c) => s + c.amount, 0);
+    if (pending <= 0) throw new BadRequestException('No pending earnings to withdraw');
+
+    const existing = await this.prisma.payoutRequest.findFirst({
+      where: { affiliateId: affiliate.id, status: 'PENDING' },
+    });
+    if (existing) throw new BadRequestException('You already have a payout request in progress');
+
+    const [request] = await this.prisma.$transaction([
+      this.prisma.payoutRequest.create({
+        data: { affiliateId: affiliate.id, amount: pending, method, account },
+      }),
+      this.prisma.affiliate.update({
+        where: { id: affiliate.id },
+        data: { payoutMethod: method, payoutAccount: account },
+      }),
+    ]);
+    return request;
+  }
+
+  async adminPayouts(status?: string) {
+    const where: any = {};
+    if (status && status !== 'all') where.status = status.toUpperCase();
+    return this.prisma.payoutRequest.findMany({
+      where,
+      include: {
+        affiliate: {
+          select: { id: true, name: true, code: true, telegramUsername: true, phone: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  /** Mark request paid + settle every PENDING commission of that affiliate. */
+  async markPayoutPaid(id: string) {
+    const request = await this.prisma.payoutRequest.findUnique({ where: { id } });
+    if (!request) throw new NotFoundException('Payout request not found');
+    if (request.status !== 'PENDING') throw new BadRequestException('Request already handled');
+
+    await this.prisma.$transaction([
+      this.prisma.payoutRequest.update({ where: { id }, data: { status: 'PAID' } }),
+      this.prisma.commission.updateMany({
+        where: { affiliateId: request.affiliateId, status: 'PENDING' },
+        data: { status: 'PAID', paidAt: new Date(), note: `Payout ${id.slice(0, 8)}` },
+      }),
+    ]);
+    return this.prisma.payoutRequest.findUnique({ where: { id } });
+  }
+
+  async rejectPayout(id: string) {
+    const request = await this.prisma.payoutRequest.findUnique({ where: { id } });
+    if (!request) throw new NotFoundException('Payout request not found');
+    if (request.status !== 'PENDING') throw new BadRequestException('Request already handled');
+    return this.prisma.payoutRequest.update({ where: { id }, data: { status: 'REJECTED' } });
+  }
 }

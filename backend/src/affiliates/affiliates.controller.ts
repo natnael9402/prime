@@ -38,11 +38,35 @@ export class AffiliatesController {
     return { link: await this.affiliates.referralLink(code, productId) };
   }
 
+  /** Public: affiliate requests a payout (Telebirr phone or CBE account). */
+  @Post('payout')
+  async requestPayout(@Body() body: { code: string; method: string; account: string }) {
+    return this.affiliates.requestPayout(body);
+  }
+
   // ---------- Admin ----------
   @UseGuards(AdminGuard)
   @Get('admin/list')
   async adminList() {
     return this.affiliates.adminList();
+  }
+
+  @UseGuards(AdminGuard)
+  @Get('admin/payouts')
+  async adminPayouts(@Query('status') status?: string) {
+    return this.affiliates.adminPayouts(status);
+  }
+
+  @UseGuards(AdminGuard)
+  @Post('admin/payouts/:id/pay')
+  async payPayout(@Param('id') id: string) {
+    return this.affiliates.markPayoutPaid(id);
+  }
+
+  @UseGuards(AdminGuard)
+  @Post('admin/payouts/:id/reject')
+  async rejectPayout(@Param('id') id: string) {
+    return this.affiliates.rejectPayout(id);
   }
 
   @UseGuards(AdminGuard)
