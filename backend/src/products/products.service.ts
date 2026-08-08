@@ -110,7 +110,7 @@ export class ProductsService {
       include: {
         category: true,
         activationGuide: true,
-        _count: { select: { licenseKeys: true, orders: true } },
+        _count: { select: { licenseKeys: true, orders: true, stockAlerts: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -119,6 +119,7 @@ export class ProductsService {
       ...this.formatProduct(p, true),
       ordersCount: p._count.orders,
       keysCount: p._count.licenseKeys,
+      alertsCount: p._count.stockAlerts,
       pricingPreview:
         p.costUSD != null
           ? this.settings.computePrice(

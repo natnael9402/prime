@@ -114,6 +114,15 @@ export const api = {
     const res = await client.post('/affiliates/payout', payload);
     return res.data;
   },
+  subscribeStockAlert: async (payload: {
+    productId: string;
+    telegramUserId: string;
+    username?: string;
+    firstName?: string;
+  }) => {
+    const res = await client.post('/stock-alerts', payload);
+    return res.data;
+  },
 
   // Home cards (admin-driven hero/promo blocks)
   getHomeCards: async () => {

@@ -223,6 +223,25 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /** Notify a subscriber that a product is back in stock. */
+  async notifyBackInStock(data: {
+    telegramUserId: string;
+    productName: string;
+    price: number;
+    currency: string;
+    productPath: string;
+  }) {
+    if (!this.enabled) return null;
+    return this.sendMessage(
+      data.telegramUserId,
+      `🔔 <b>የጠየቅኩት ምርት ተመልሷል!</b>\n\n` +
+        `📦 ${data.productName}\n` +
+        `💰 ${data.price.toLocaleString()} ${data.currency}\n\n` +
+        `ስቶክ ሳያልቅ አሁኑኑ ይግዙ 👇`,
+      this.webAppButton('🛒 አሁን ይግዙ', data.productPath),
+    );
+  }
+
   /** Notify an affiliate about a new commission. */
   async notifyAffiliateCommission(data: {
     telegramUserId?: string | null;

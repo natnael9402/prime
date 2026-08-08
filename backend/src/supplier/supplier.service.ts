@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
 import { CacheService } from '../infra/cache.service';
 import { ProductTranslations } from '../products/translation.service';
+import { StockAlertsService } from '../stock-alerts/stock-alerts.service';
 
 const DEFAULT_BASE = 'https://open-greeting-glow-production.up.railway.app/api/public/reseller/v1';
 export const UNLIMITED_STOCK = 100000;
@@ -26,6 +27,7 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
     private config: ConfigService,
     private settings: SettingsService,
     private cache: CacheService,
+    private stockAlerts: StockAlertsService,
   ) {}
 
   onModuleInit() {
@@ -283,14 +285,23 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
     let synced = 0;
     for (const sp of products) {
       if (!sp.importedLocalId) continue;
+      const before = await this.prisma.product.findUnique({
+        where: { id: sp.importedLocalId },
+        select: { stock: true },
+      });
+      const newStock = sp.stock >= UNLIMITED_STOCK ? 9999 : sp.stock;
       await this.prisma.product.update({
         where: { id: sp.importedLocalId },
         data: {
-          stock: sp.stock >= UNLIMITED_STOCK ? 9999 : sp.stock,
+          stock: newStock,
           costUSD: sp.price_usdt,
         },
       });
       await this.settings.applyPricing(sp.importedLocalId);
+      // Supplier restock 0 → >0: ping everyone waiting on this product
+      if ((before?.stock ?? 0) <= 0 && newStock > 0) {
+        this.stockAlerts.notifyRestock(sp.importedLocalId).catch(() => undefined);
+      }
       synced++;
     }
     if (synced > 0) await this.cache.invalidatePattern('catalog:');

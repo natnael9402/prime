@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import AdminNavbar from '@/components/AdminNavbar';
 import { api } from '@/lib/api';
-import { Plus, Trash2, Key, RefreshCw, X, Package, Settings2, Pencil } from 'lucide-react';
+import { Plus, Trash2, Key, RefreshCw, X, Package, Settings2, Pencil, Bell, BellRing } from 'lucide-react';
 import ProductEditorModal from '@/components/ProductEditorModal';
 
 export default function AdminProductsPage() {
@@ -19,6 +19,11 @@ export default function AdminProductsPage() {
   const [keysLoading, setKeysLoading] = useState(false);
   const [newKeys, setNewKeys] = useState('');
   const [addingKeys, setAddingKeys] = useState(false);
+
+  // Stock-alert subscribers modal state
+  const [alertsProduct, setAlertsProduct] = useState<any>(null);
+  const [subscribers, setSubscribers] = useState<any[]>([]);
+  const [subsLoading, setSubsLoading] = useState(false);
 
   // Pricing editor state
   const [pricingProduct, setPricingProduct] = useState<any>(null);
@@ -51,6 +56,19 @@ export default function AdminProductsPage() {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openAlerts = async (p: any) => {
+    setAlertsProduct(p);
+    setSubsLoading(true);
+    setSubscribers([]);
+    try {
+      setSubscribers(await api.getStockAlerts(p.id));
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubsLoading(false);
     }
   };
 
@@ -195,6 +213,16 @@ export default function AdminProductsPage() {
                     <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white">
                       -{p.discountPct}%
                     </span>
+                  )}
+                  {(p.alertsCount > 0) && (
+                    <button
+                      onClick={() => openAlerts(p)}
+                      title="Back-in-stock subscribers"
+                      className="absolute bottom-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-400 text-slate-950 flex items-center gap-1 hover:scale-105 transition-transform"
+                    >
+                      <BellRing className="w-3 h-3" />
+                      {p.alertsCount}
+                    </button>
                   )}
                 </div>
 
@@ -425,6 +453,55 @@ export default function AdminProductsPage() {
                 )}
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* STOCK-ALERT SUBSCRIBERS MODAL */}
+      {alertsProduct && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="glass rounded-3xl w-full max-w-md max-h-[85vh] overflow-y-auto p-5 space-y-4 fade-up">
+            <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <h2 className="text-sm font-black text-white flex items-center gap-2">
+                <Bell className="w-4 h-4 text-amber-400" />
+                <span>Stock Alerts — {alertsProduct.name}</span>
+              </h2>
+              <button onClick={() => setAlertsProduct(null)} className="text-slate-500 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-[10px] text-slate-500 font-semibold">
+              These users tapped "Notify me" and will get a Telegram message the moment keys are added.
+            </p>
+
+            {subsLoading ? (
+              <div className="py-8 flex justify-center">
+                <RefreshCw className="w-5 h-5 animate-spin text-amber-400" />
+              </div>
+            ) : subscribers.length === 0 ? (
+              <p className="text-[11px] text-slate-500 py-4 text-center">Nobody is waiting on this product.</p>
+            ) : (
+              <div className="space-y-1.5">
+                {subscribers.map((s) => (
+                  <div
+                    key={s.id}
+                    className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/5"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-[12px] font-bold text-slate-100 truncate">
+                        {s.firstName || 'Telegram user'}
+                        {s.username && <span className="text-sky-400 font-semibold ml-1.5">@{s.username}</span>}
+                      </div>
+                      <div className="text-[9px] text-slate-500 font-mono">ID {s.telegramUserId}</div>
+                    </div>
+                    <span className="text-[9px] text-slate-500 shrink-0 ml-2">
+                      {new Date(s.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

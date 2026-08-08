@@ -113,6 +113,10 @@ export const api = {
     const res = await client.get(`/licenses/${productId}/keys`);
     return res.data;
   },
+  getStockAlerts: async (productId: string) => {
+    const res = await client.get(`/stock-alerts/admin/product/${productId}`);
+    return res.data;
+  },
   addProductKeys: async (productId: string, keys: string[]) => {
     const res = await client.post(`/licenses/${productId}/keys`, { keys });
     return res.data;

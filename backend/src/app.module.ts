@@ -10,6 +10,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { OrdersModule } from './orders/orders.module';
 import { AffiliatesModule } from './affiliates/affiliates.module';
 import { TelegramModule } from './telegram/telegram.module';
+import { StockAlertsModule } from './stock-alerts/stock-alerts.module';
 import { SettingsModule } from './settings/settings.module';
 import { SupplierModule } from './supplier/supplier.module';
 import { AuthModule } from './auth/auth.module';
@@ -30,6 +31,7 @@ import { R2Module } from './r2/r2.module';
     OrdersModule,
     AffiliatesModule,
     TelegramModule,
+    StockAlertsModule,
     SettingsModule,
     SupplierModule,
     AuthModule,

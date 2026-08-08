@@ -1,9 +1,13 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { StockAlertsService } from '../stock-alerts/stock-alerts.service';
 
 @Injectable()
 export class LicensesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private stockAlerts: StockAlertsService,
+  ) {}
 
   async addKeys(productId: string, keys: string[]) {
     const cleanKeys = keys.map(k => k.trim()).filter(k => k.length > 0);
@@ -12,6 +16,11 @@ export class LicensesService {
       code,
       isUsed: false,
     }));
+
+    const before = await this.prisma.product.findUnique({
+      where: { id: productId },
+      select: { stock: true },
+    });
 
     await this.prisma.licenseKey.createMany({ data });
 
@@ -23,6 +32,11 @@ export class LicensesService {
       where: { id: productId },
       data: { stock: availableCount },
     });
+
+    // Restock 0 → >0: ping everyone waiting on this product
+    if ((before?.stock ?? 0) <= 0 && availableCount > 0) {
+      this.stockAlerts.notifyRestock(productId).catch(() => undefined);
+    }
 
     return { added: cleanKeys.length, totalAvailable: availableCount };
   }
