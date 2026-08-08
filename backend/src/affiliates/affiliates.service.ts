@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service';
+import { TelegramService } from '../telegram/telegram.service';
 
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -12,6 +13,7 @@ export class AffiliatesService {
   constructor(
     private prisma: PrismaService,
     private config: ConfigService,
+    private telegram: TelegramService,
   ) {}
 
   private generateCode(name: string): string {
@@ -386,6 +388,18 @@ export class AffiliatesService {
         data: { payoutMethod: method, payoutAccount: account },
       }),
     ]);
+
+    // Owner-only ping: money going out needs eyes on it
+    const who = affiliate.telegramUsername ? `@${affiliate.telegramUsername}` : affiliate.name;
+    this.telegram
+      .notifyAdmin(
+        `💸 <b>Payout request</b>\n` +
+          `👤 ${who} (${affiliate.code})\n` +
+          `💰 ${pending.toLocaleString()} ETB\n` +
+          `🏦 ${method === 'telebirr' ? 'Telebirr' : 'CBE Birr'}: <code>${account}</code>`,
+      )
+      .catch(() => undefined);
+
     return request;
   }
 

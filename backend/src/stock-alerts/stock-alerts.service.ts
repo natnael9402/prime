@@ -25,22 +25,38 @@ export class StockAlertsService {
 
     const product = await this.prisma.product.findFirst({
       where: { OR: [{ id: dto.productId }, { slug: dto.productId }] },
-      select: { id: true, stock: true },
+      select: { id: true, stock: true, name: true },
     });
     if (!product) throw new NotFoundException('Product not found');
 
-    const alert = await this.prisma.stockAlert.upsert({
+    const existing = await this.prisma.stockAlert.findUnique({
       where: {
         productId_telegramUserId: { productId: product.id, telegramUserId },
       },
-      create: {
+    });
+    if (existing) return { subscribed: true, id: existing.id };
+
+    const alert = await this.prisma.stockAlert.create({
+      data: {
         productId: product.id,
         telegramUserId,
         username: dto.username || null,
         firstName: dto.firstName || null,
       },
-      update: {},
     });
+
+    // Owner-only ping: demand signal for restocking decisions
+    const waiting = await this.prisma.stockAlert.count({ where: { productId: product.id } });
+    const who = dto.username ? `@${dto.username}` : dto.firstName || 'A customer';
+    this.telegram
+      .notifyAdmin(
+        `🔔 <b>Stock alert request</b>\n` +
+          `📦 ${product.name}\n` +
+          `👤 ${who}\n\n` +
+          `${waiting} user(s) waiting — time to restock?`,
+      )
+      .catch(() => undefined);
+
     return { subscribed: true, id: alert.id };
   }
 

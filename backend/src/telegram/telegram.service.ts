@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class TelegramService implements OnModuleInit, OnModuleDestroy {
@@ -10,8 +11,27 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   private polling = false;
   private pollTimer: any = null;
 
-  constructor(private config: ConfigService) {
+  constructor(
+    private config: ConfigService,
+    private prisma: PrismaService,
+  ) {
     this.token = this.config.get<string>('TELEGRAM_BOT_TOKEN');
+  }
+
+  private get adminChatId(): string | undefined {
+    return this.config.get<string>('TELEGRAM_ADMIN_CHAT_ID') || undefined;
+  }
+
+  private isAdmin(chatId: string | number): boolean {
+    const admin = this.adminChatId;
+    return !!admin && String(chatId) === String(admin);
+  }
+
+  /** DM the store owner (no-op when TELEGRAM_ADMIN_CHAT_ID is unset). */
+  async notifyAdmin(text: string, replyMarkup?: any) {
+    const admin = this.adminChatId;
+    if (!admin || !this.enabled) return null;
+    return this.sendMessage(admin, text, replyMarkup);
   }
 
   get enabled(): boolean {
@@ -149,6 +169,81 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       );
       return;
     }
+
+    // Anyone can learn their own chat id (used to wire up admin alerts).
+    if (text.startsWith('/id')) {
+      await this.sendMessage(chatId, `🆔 Your chat id: <code>${chatId}</code>`);
+      return;
+    }
+
+    // ---------- Admin-only (read-only stats) ----------
+    if (text.startsWith('/stats')) {
+      if (!this.isAdmin(chatId)) return; // silent for non-admins
+      await this.sendAdminStats(chatId);
+      return;
+    }
+  }
+
+  /** Read-only store snapshot for the owner. */
+  private async sendAdminStats(chatId: string | number) {
+    const dayStart = new Date();
+    dayStart.setHours(0, 0, 0, 0);
+
+    const [totalPaid, todayPaid, pendingOrders, totalOrders, outOfStock, alertsWaiting, recent] =
+      await Promise.all([
+        this.prisma.order.groupBy({
+          by: ['currency'],
+          where: { status: 'PAID' },
+          _sum: { amount: true },
+          _count: { _all: true },
+        }),
+        this.prisma.order.groupBy({
+          by: ['currency'],
+          where: { status: 'PAID', createdAt: { gte: dayStart } },
+          _sum: { amount: true },
+          _count: { _all: true },
+        }),
+        this.prisma.order.count({ where: { status: 'PENDING' } }),
+        this.prisma.order.count(),
+        this.prisma.product.count({ where: { stock: { lte: 0 } } }),
+        this.prisma.stockAlert.count(),
+        this.prisma.order.findMany({
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+          select: {
+            customerName: true,
+            amount: true,
+            currency: true,
+            status: true,
+            product: { select: { name: true } },
+          },
+        }),
+      ]);
+
+    const fmt = (rows: any[]) =>
+      rows.length === 0
+        ? '0 ETB'
+        : rows
+            .map((r) => `${(r._sum.amount || 0).toLocaleString()} ${r.currency} (${r._count._all})`)
+            .join(' + ');
+
+    const recentLines = recent
+      .map(
+        (o) =>
+          `• ${o.customerName} — ${o.product?.name || 'ምርት'} — <b>${o.amount.toLocaleString()} ${o.currency}</b> — ${o.status}`,
+      )
+      .join('\n');
+
+    await this.sendMessage(
+      chatId,
+      `📊 <b>Prime Store — Stats</b>\n\n` +
+        `💰 Total revenue: <b>${fmt(totalPaid)}</b>\n` +
+        `📅 Today: <b>${fmt(todayPaid)}</b>\n` +
+        `📦 Orders: ${totalOrders} total · ⏳ ${pendingOrders} pending\n` +
+        `📪 Out of stock: ${outOfStock} product(s)\n` +
+        `🔔 Stock alerts waiting: ${alertsWaiting}\n\n` +
+        `🧾 <b>Latest orders</b>\n${recentLines || '• none yet'}`,
+    );
   }
 
   private async startPolling() {
