@@ -127,7 +127,6 @@ const en = {
   payoutSubmitted: 'Request received!',
   payoutSubmittedHint: "We'll send your payout shortly",
   continue: 'Continue',
-  back: 'Back',
   youllReceive: "You'll receive",
 
   // Test mode
@@ -272,7 +271,6 @@ const am: Dict = {
   payoutSubmitted: 'ጥያቄዎ ደርሷል!',
   payoutSubmittedHint: 'ክፍያዎ በቅርቡ ይላካል',
   continue: 'ቀጥል',
-  back: 'ተመለስ',
   youllReceive: 'ይደርስዎታል',
 
   testMode: 'የሙከራ ሞድ',
