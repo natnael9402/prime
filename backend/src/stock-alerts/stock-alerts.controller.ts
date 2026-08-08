@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { StockAlertsService } from './stock-alerts.service';
 import { AdminGuard } from '../auth/admin.guard';
 
@@ -6,7 +7,8 @@ import { AdminGuard } from '../auth/admin.guard';
 export class StockAlertsController {
   constructor(private readonly stockAlerts: StockAlertsService) {}
 
-  /** Public: subscribe to a back-in-stock alert. */
+  /** Public: subscribe to a back-in-stock alert. Tight limit — each sub pings Telegram. */
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post()
   async subscribe(
     @Body()

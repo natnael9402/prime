@@ -25,8 +25,20 @@ async function bootstrap() {
   // gzip responses — catalog JSON shrinks ~70%
   app.use(compression());
 
+  // CORS: lock browser access to the known storefront/admin origins.
+  // Server-to-server calls (Chapa webhook, Telegram API, curl) send no
+  // Origin header and are always allowed. Unset = permissive (local dev).
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
   app.enableCors({
-    origin: true,
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+        return cb(null, true);
+      }
+      return cb(null, false);
+    },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });

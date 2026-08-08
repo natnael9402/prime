@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Put, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AffiliatesService } from './affiliates.service';
 import { AdminGuard } from '../auth/admin.guard';
 
@@ -6,6 +7,7 @@ import { AdminGuard } from '../auth/admin.guard';
 export class AffiliatesController {
   constructor(private readonly affiliates: AffiliatesService) {}
 
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
   @Post('join')
   async join(
     @Body()
@@ -39,6 +41,7 @@ export class AffiliatesController {
   }
 
   /** Public: affiliate requests a payout (Telebirr phone or CBE account). */
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   @Post('payout')
   async requestPayout(@Body() body: { code: string; method: string; account: string }) {
     return this.affiliates.requestPayout(body);
