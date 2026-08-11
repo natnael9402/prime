@@ -113,18 +113,20 @@ export default function AdminOrdersPage() {
                       <td className="font-mono font-bold text-amber-400 whitespace-nowrap">{o.txRef}</td>
                       <td>
                         {(() => {
-                          // Prefer @username (t.me opens a direct chat); fall back to
-                          // tg://user?id= which opens their profile in the Telegram app.
+                          // @username → t.me (reliable everywhere). ID-only →
+                          // tg://openmessage jumps straight into the chat dialog.
                           const chatUrl = o.telegramUsername
                             ? `https://t.me/${o.telegramUsername}`
                             : o.telegramUserId
-                            ? `tg://user?id=${o.telegramUserId}`
+                            ? `tg://openmessage?user_id=${o.telegramUserId}`
                             : null;
+                          const isAppLink = chatUrl?.startsWith('tg://');
                           return chatUrl ? (
                             <a
                               href={chatUrl}
-                              target="_blank"
-                              rel="noreferrer"
+                              // tg:// with target=_blank leaves an empty tab behind —
+                              // app links navigate in-place instead.
+                              {...(isAppLink ? {} : { target: '_blank', rel: 'noreferrer' })}
                               title="Open Telegram chat"
                               className="inline-flex items-center gap-1 font-bold text-sky-300 hover:text-sky-200 hover:underline"
                             >
