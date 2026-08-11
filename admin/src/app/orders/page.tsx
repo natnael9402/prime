@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import AdminNavbar from '@/components/AdminNavbar';
 import { api } from '@/lib/api';
-import { ShoppingBag, RefreshCw } from 'lucide-react';
+import { ShoppingBag, RefreshCw, MessageCircle } from 'lucide-react';
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -112,7 +112,29 @@ export default function AdminOrdersPage() {
                     <tr key={o.id}>
                       <td className="font-mono font-bold text-amber-400 whitespace-nowrap">{o.txRef}</td>
                       <td>
-                        <div className="font-bold text-slate-100">{o.customerName}</div>
+                        {(() => {
+                          // Prefer @username (t.me opens a direct chat); fall back to
+                          // tg://user?id= which opens their profile in the Telegram app.
+                          const chatUrl = o.telegramUsername
+                            ? `https://t.me/${o.telegramUsername}`
+                            : o.telegramUserId
+                            ? `tg://user?id=${o.telegramUserId}`
+                            : null;
+                          return chatUrl ? (
+                            <a
+                              href={chatUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              title="Open Telegram chat"
+                              className="inline-flex items-center gap-1 font-bold text-sky-300 hover:text-sky-200 hover:underline"
+                            >
+                              {o.customerName}
+                              <MessageCircle className="w-3 h-3 opacity-70 shrink-0" />
+                            </a>
+                          ) : (
+                            <div className="font-bold text-slate-100">{o.customerName}</div>
+                          );
+                        })()}
                         <div className="text-[10px] text-slate-500">{o.customerEmail}</div>
                         {o.telegramUsername && (
                           <div className="text-[10px] text-sky-400">@{o.telegramUsername}</div>
