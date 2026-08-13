@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import AdminNavbar from '@/components/AdminNavbar';
 import { api } from '@/lib/api';
 import { ShoppingBag, RefreshCw, MessageCircle } from 'lucide-react';
+import OrderDetailsModal from '@/components/OrderDetailsModal';
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -13,6 +14,7 @@ export default function AdminOrdersPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [retrying, setRetrying] = useState<string | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
 
   useEffect(() => {
     loadOrders();
@@ -109,7 +111,12 @@ export default function AdminOrdersPage() {
                     <tr><td colSpan={11} className="text-center text-slate-500 py-8">No orders found</td></tr>
                   )}
                   {orders.map((o) => (
-                    <tr key={o.id}>
+                    <tr
+                      key={o.id}
+                      onClick={() => setSelectedOrder(o)}
+                      className="cursor-pointer hover:bg-white/[0.03] transition-colors"
+                      title="View order details"
+                    >
                       <td className="font-mono font-bold text-amber-400 whitespace-nowrap">{o.txRef}</td>
                       <td>
                         {(() => {
@@ -124,6 +131,7 @@ export default function AdminOrdersPage() {
                           return chatUrl ? (
                             <a
                               href={chatUrl}
+                              onClick={(e) => e.stopPropagation()}
                               // tg:// with target=_blank leaves an empty tab behind —
                               // app links navigate in-place instead.
                               {...(isAppLink ? {} : { target: '_blank', rel: 'noreferrer' })}
@@ -176,7 +184,7 @@ export default function AdminOrdersPage() {
                           <div className="space-y-1">
                             <span className="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 font-bold text-[9px]">FAILED</span>
                             <button
-                              onClick={() => handleRetryFulfill(o.id)}
+                              onClick={(e) => { e.stopPropagation(); handleRetryFulfill(o.id); }}
                               disabled={retrying === o.id}
                               className="block btn-ghost px-2 py-0.5 rounded-lg text-[9px] font-bold text-amber-300"
                             >
@@ -230,6 +238,10 @@ export default function AdminOrdersPage() {
           </div>
         )}
       </main>
+
+      {selectedOrder && (
+        <OrderDetailsModal order={selectedOrder} onClose={() => setSelectedOrder(null)} />
+      )}
     </div>
   );
 }
