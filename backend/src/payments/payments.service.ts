@@ -142,7 +142,10 @@ export class PaymentsService {
       const product = await this.prisma.product.findUnique({ where: { id: item.productId } });
       if (!product) throw new BadRequestException(`Product not found`);
       if (product.stock <= 0) throw new BadRequestException(`"${product.name}" አልቋል (Out of stock)`);
-      if (product.source !== 'HUBX' && product.stock < qty) {
+      // Supplier-backed products (HubX/GeminiPro): supplier is stock-authoritative
+      // at fulfillment time, so no local upper-limit. Local key pools are strict.
+      const supplierBacked = ['HUBX', 'GEMINIPRO'].includes(product.source || '');
+      if (!supplierBacked && product.stock < qty) {
         throw new BadRequestException(`"${product.name}" ${product.stock} ብቻ ነው ያለው (Only ${product.stock} left)`);
       }
       lines.push({ product, quantity: qty, lineTotal: product.price * qty });
