@@ -1,23 +1,41 @@
-import { Injectable, BadRequestException, ServiceUnavailableException, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
 import { CacheService } from '../infra/cache.service';
 import { ProductTranslations } from '../products/translation.service';
 import { StockAlertsService } from '../stock-alerts/stock-alerts.service';
+import { SupplierAdapter, buildSupplierRegistry } from './adapters';
 
-const DEFAULT_BASE = 'https://open-greeting-glow-production.up.railway.app/api/public/reseller/v1';
-export const UNLIMITED_STOCK = 100000;
-
-/** How often local stock mirrors the supplier (minutes). 0 disables. */
+/** How often local stock mirrors the suppliers (minutes). 0 disables. */
 const DEFAULT_SYNC_INTERVAL_MIN = 5;
-/** Minimum gap between any two syncs — failures can't spam the supplier. */
+/** Minimum gap between any two syncs — failures can't spam the suppliers. */
 const SYNC_DEBOUNCE_MS = 60_000;
+
+export interface ImportProductDto {
+  supplier?: string;
+  supplierProductId: string;
+  categoryId: string;
+  name?: string;
+  shortDesc?: string;
+  description?: string;
+  bannerUrl?: string;
+  gallery?: string[];
+  marginMultiplier?: number;
+  discountPct?: number;
+  manualPrice?: number;
+  originalPrice?: number;
+  badge?: string;
+  features?: string[];
+  requirements?: string[];
+  activationSteps?: string[];
+  translations?: ProductTranslations;
+}
 
 @Injectable()
 export class SupplierService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(SupplierService.name);
+  private readonly registry: Record<string, SupplierAdapter>;
   private syncTimer: NodeJS.Timeout | null = null;
   private syncing = false;
   private lastSyncAt = 0;
@@ -28,13 +46,15 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
     private settings: SettingsService,
     private cache: CacheService,
     private stockAlerts: StockAlertsService,
-  ) {}
+  ) {
+    this.registry = buildSupplierRegistry(config);
+  }
 
   onModuleInit() {
     const raw = (this.config.get<string>('SUPPLIER_SYNC_INTERVAL_MINUTES') || '').trim();
     const minutes = raw === '' ? DEFAULT_SYNC_INTERVAL_MIN : Number(raw);
-    if (!this.configured) {
-      this.logger.warn('Supplier key not configured — automatic stock sync disabled.');
+    if (!this.anyConfigured) {
+      this.logger.warn('No supplier key configured — automatic stock sync disabled.');
       return;
     }
     if (!Number.isFinite(minutes) || minutes <= 0) {
@@ -72,71 +92,44 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  get configured(): boolean {
-    const key = this.config.get<string>('SUPPLIER_API_KEY') || '';
-    return key.startsWith('rsk_') && key.length > 12;
+  // ---------- Registry ----------
+
+  adapter(code?: string): SupplierAdapter {
+    const a = this.registry[(code || 'HUBX').toUpperCase()];
+    if (!a) throw new BadRequestException(`Unknown supplier: ${code}`);
+    return a;
   }
 
-  get keyMode(): 'test' | 'live' | 'none' {
-    const key = this.config.get<string>('SUPPLIER_API_KEY') || '';
-    if (key.startsWith('rsk_test_')) return 'test';
-    if (key.startsWith('rsk_live_')) return 'live';
-    return 'none';
+  get anyConfigured(): boolean {
+    return Object.values(this.registry).some((a) => a.configured);
   }
 
-  private get baseUrl(): string {
-    return (this.config.get<string>('SUPPLIER_BASE_URL') || DEFAULT_BASE).replace(/\/$/, '');
+  /** Admin: the supplier switcher. */
+  listSuppliers() {
+    return Object.values(this.registry).map((a) => ({
+      code: a.code,
+      label: a.label,
+      configured: a.configured,
+      keyMode: a.keyMode,
+    }));
   }
 
-  private headers() {
-    return {
-      Authorization: `Bearer ${this.config.get<string>('SUPPLIER_API_KEY')}`,
-      'Content-Type': 'application/json',
-    };
-  }
-
-  private async request<T = any>(method: 'get' | 'post', path: string, body?: any): Promise<T> {
-    if (!this.configured) {
-      throw new ServiceUnavailableException(
-        'Supplier API key not configured. Set SUPPLIER_API_KEY (rsk_test_… or rsk_live_…).',
-      );
-    }
-    try {
-      const res = await axios.request({
-        method,
-        url: `${this.baseUrl}${path}`,
-        data: body,
-        headers: this.headers(),
-        timeout: 20000,
-      });
-      return res.data;
-    } catch (err: any) {
-      const status = err?.response?.status;
-      const msg =
-        err?.response?.data?.error ||
-        err?.response?.data?.message ||
-        err?.message ||
-        'Supplier request failed';
-      this.logger.warn(`Supplier ${method.toUpperCase()} ${path} → ${status}: ${msg}`);
-      if (status === 402) throw new BadRequestException('Insufficient supplier wallet balance (402)');
-      if (status === 409) throw new BadRequestException('Supplier out of stock (409)');
-      if (status === 401) throw new ServiceUnavailableException('Supplier API key invalid or revoked (401)');
-      if (status === 404) throw new BadRequestException('Supplier product/order not found (404)');
-      throw new ServiceUnavailableException(`Supplier error: ${msg}`);
-    }
-  }
-
-  async status() {
+  async status(code?: string) {
+    const a = this.adapter(code);
     const info: any = {
-      configured: this.configured,
-      keyMode: this.keyMode,
-      baseUrl: this.baseUrl,
-      balance: null,
+      supplier: a.code,
+      label: a.label,
+      configured: a.configured,
+      keyMode: a.keyMode,
+      baseUrl: a.baseUrl,
+      balanceAmount: null,
+      balanceCurrency: null,
     };
-    if (this.configured) {
+    if (a.configured) {
       try {
-        const bal = await this.request('get', '/balance');
-        info.balance = bal;
+        const bal = await a.balance();
+        info.balanceAmount = bal.amount;
+        info.balanceCurrency = bal.currency;
       } catch (err: any) {
         info.balanceError = err.message;
       }
@@ -144,57 +137,36 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
     return info;
   }
 
-  async listProducts() {
-    const data = await this.request('get', '/products');
-    const products = (data.products || []) as any[];
+  async listProducts(code?: string) {
+    const a = this.adapter(code);
+    const products = await a.listProducts();
 
     // Annotate with local import state + computed ETB pricing preview
     const settings = await this.settings.getAll();
     const imported = await this.prisma.product.findMany({
-      where: { source: 'HUBX' },
+      where: { source: a.code },
       select: { supplierProductId: true, id: true },
     });
     const importedMap = new Map(imported.map((p) => [p.supplierProductId, p.id]));
 
-    return products.map((p) => {
-      const pricing = this.settings.computePrice(
-        { costUSD: p.price_usdt, marginMultiplier: null, discountPct: 0 },
+    return products.map((p) => ({
+      ...p,
+      supplierLabel: a.label,
+      importedLocalId: importedMap.get(p.id) || null,
+      pricePreviewETB: this.settings.computePrice(
+        { costUSD: p.priceUSD, marginMultiplier: null, discountPct: 0 },
         settings,
-      );
-      return {
-        ...p,
-        unlimited: p.stock >= UNLIMITED_STOCK,
-        importedLocalId: importedMap.get(p.id) || importedMap.get(p.slug) || null,
-        pricePreviewETB: pricing.final,
-      };
-    });
+      ).final,
+    }));
   }
 
-  async importProduct(dto: {
-    supplierProductId: string;
-    categoryId: string;
-    name?: string;
-    shortDesc?: string;
-    description?: string;
-    bannerUrl?: string;
-    gallery?: string[];
-    marginMultiplier?: number;
-    discountPct?: number;
-    manualPrice?: number;
-    originalPrice?: number;
-    badge?: string;
-    features?: string[];
-    requirements?: string[];
-    activationSteps?: string[];
-    translations?: ProductTranslations;
-  }) {
-    const data = await this.request('get', `/products/${dto.supplierProductId}`);
-    const sp = data.product;
-    if (!sp) throw new BadRequestException('Supplier product not found');
+  async importProduct(dto: ImportProductDto) {
+    const a = this.adapter(dto.supplier);
+    const sp = await a.getProduct(dto.supplierProductId);
 
     const settings = await this.settings.getAll();
     const pricing = this.settings.computePrice(
-      { costUSD: sp.price_usdt, marginMultiplier: dto.marginMultiplier || null, discountPct: dto.discountPct || 0 },
+      { costUSD: sp.priceUSD, marginMultiplier: dto.marginMultiplier || null, discountPct: dto.discountPct || 0 },
       settings,
     );
 
@@ -209,18 +181,17 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
         : null;
 
     const name = String(dto.name || sp.name).trim();
-    const slug = `hubx-${sp.slug}`.replace(/[^a-z0-9-]+/g, '-');
-    const supplierImage = sp.image_url || sp.imageUrl || sp.image || null;
+    const slug = (a.code === 'HUBX' ? `hubx-${sp.slug}` : sp.slug).replace(/[^a-z0-9-]+/g, '-');
     const banner =
       dto.bannerUrl ||
-      supplierImage ||
+      sp.imageUrl ||
       'https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&auto=format&fit=crop&q=80';
     const gallery = Array.from(
       new Set([banner, ...(Array.isArray(dto.gallery) ? dto.gallery : [])].map((url) => String(url || '').trim()).filter(Boolean)),
     );
 
     const existing = await this.prisma.product.findFirst({
-      where: { OR: [{ slug }, { supplierProductId: sp.id }] },
+      where: { OR: [{ slug }, { AND: [{ supplierProductId: sp.id }, { source: a.code }] }] },
     });
 
     const features = dto.features?.length
@@ -237,6 +208,7 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
       shortDesc: String(dto.shortDesc || `${name} — instant digital delivery`).trim(),
       description: String(
         dto.description ||
+          sp.description ||
           `${name}. Premium digital product with fast delivery. After your payment is confirmed, your license or account details arrive instantly.`,
       ).trim(),
       price: finalPrice,
@@ -248,12 +220,12 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
       features: JSON.stringify(features),
       requirements: JSON.stringify(requirements),
       translations: JSON.stringify(dto.translations || {}),
-      stock: sp.stock >= UNLIMITED_STOCK ? 9999 : sp.stock,
+      stock: sp.unlimited ? 9999 : sp.stock,
       instantDelivery: true,
       isFeatured: true,
-      source: 'HUBX',
+      source: a.code,
       supplierProductId: sp.id,
-      costUSD: sp.price_usdt,
+      costUSD: sp.priceUSD,
       priceMode: manualPrice ? 'MANUAL' : 'AUTO',
       marginMultiplier: dto.marginMultiplier || null,
       discountPct: dto.discountPct || 0,
@@ -279,28 +251,43 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
     return product;
   }
 
-  async syncStock() {
-    if (!this.configured) return { synced: 0, reason: 'not_configured' };
-    const products = await this.listProducts();
+  /** Sync one supplier (code given) or every configured supplier. */
+  async syncStock(code?: string) {
+    if (code) return this.syncSupplier(this.adapter(code));
     let synced = 0;
-    for (const sp of products) {
-      if (!sp.importedLocalId) continue;
-      const before = await this.prisma.product.findUnique({
-        where: { id: sp.importedLocalId },
-        select: { stock: true },
-      });
-      const newStock = sp.stock >= UNLIMITED_STOCK ? 9999 : sp.stock;
+    for (const a of Object.values(this.registry)) {
+      if (!a.configured) continue;
+      try {
+        synced += (await this.syncSupplier(a)).synced;
+      } catch (err: any) {
+        this.logger.warn(`${a.label} sync failed: ${err?.message}`);
+      }
+    }
+    return { synced };
+  }
+
+  private async syncSupplier(a: SupplierAdapter) {
+    if (!a.configured) return { synced: 0, reason: 'not_configured' };
+    const remote = await a.listProducts();
+    const byId = new Map(remote.map((p) => [p.id, p]));
+    const local = await this.prisma.product.findMany({
+      where: { source: a.code, supplierProductId: { not: null } },
+      select: { id: true, supplierProductId: true, stock: true },
+    });
+
+    let synced = 0;
+    for (const lp of local) {
+      const sp = byId.get(String(lp.supplierProductId));
+      if (!sp) continue;
+      const newStock = sp.unlimited ? 9999 : sp.stock;
       await this.prisma.product.update({
-        where: { id: sp.importedLocalId },
-        data: {
-          stock: newStock,
-          costUSD: sp.price_usdt,
-        },
+        where: { id: lp.id },
+        data: { stock: newStock, costUSD: sp.priceUSD },
       });
-      await this.settings.applyPricing(sp.importedLocalId);
+      await this.settings.applyPricing(lp.id);
       // Supplier restock 0 → >0: ping everyone waiting on this product
-      if ((before?.stock ?? 0) <= 0 && newStock > 0) {
-        this.stockAlerts.notifyRestock(sp.importedLocalId).catch(() => undefined);
+      if ((lp.stock ?? 0) <= 0 && newStock > 0) {
+        this.stockAlerts.notifyRestock(lp.id).catch(() => undefined);
       }
       synced++;
     }
@@ -309,8 +296,9 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Fulfill one PAID order with the supplier. Idempotent via external_order_id = order.txRef.
-   * Returns delivered items on success; throws on failure (caller records FAILED).
+   * Fulfill one PAID order with its supplier, routed by product.source.
+   * Retries NEVER buy twice: when supplierOrderId exists we fetch the
+   * original purchase instead of creating a new one.
    */
   async fulfillOrder(orderId: string): Promise<{ items: string[]; supplierOrderId: string }> {
     const order = await this.prisma.order.findUnique({
@@ -321,6 +309,7 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
     if (!order.product?.supplierProductId) {
       throw new BadRequestException('Order product is not supplier-backed');
     }
+    const a = this.adapter(order.product.source || 'HUBX');
 
     await this.prisma.order.update({
       where: { id: order.id },
@@ -328,19 +317,20 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
     });
 
     try {
-      const res = await this.request('post', '/orders', {
-        product_id: order.product.supplierProductId,
-        quantity: order.quantity || 1,
-        external_order_id: order.txRef,
-      });
+      const result = order.supplierOrderId
+        ? await a.getOrder(order.supplierOrderId)
+        : await a.createOrder(order.product.supplierProductId, order.quantity || 1, order.txRef);
 
-      const items: string[] = res.items || [];
+      if (!result.items.length) {
+        throw new BadRequestException(`${a.label} order ${result.supplierOrderId} has no delivered items yet`);
+      }
+
       await this.prisma.order.update({
         where: { id: order.id },
         data: {
           fulfillmentStatus: 'DELIVERED',
-          supplierOrderId: res.order_id || null,
-          licenseKey: items.join('\n'),
+          supplierOrderId: result.supplierOrderId || order.supplierOrderId,
+          licenseKey: result.items.join('\n'),
           fulfillmentError: null,
         },
       });
@@ -351,7 +341,7 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
         data: { stock: { decrement: order.quantity || 1 } },
       });
 
-      return { items, supplierOrderId: res.order_id };
+      return { items: result.items, supplierOrderId: result.supplierOrderId };
     } catch (err: any) {
       await this.prisma.order.update({
         where: { id: order.id },

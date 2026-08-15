@@ -172,16 +172,21 @@ export const api = {
     return res.data;
   },
 
-  // Supplier (HubX)
-  getSupplierStatus: async () => {
-    const res = await client.get('/supplier/status');
+  // Suppliers (HubX, GeminiPro, …)
+  getSuppliers: async () => {
+    const res = await client.get('/supplier/list');
     return res.data;
   },
-  getSupplierProducts: async () => {
-    const res = await client.get('/supplier/products');
+  getSupplierStatus: async (supplier?: string) => {
+    const res = await client.get('/supplier/status', { params: { supplier } });
+    return res.data;
+  },
+  getSupplierProducts: async (supplier?: string) => {
+    const res = await client.get('/supplier/products', { params: { supplier } });
     return res.data;
   },
   importSupplierProduct: async (dto: {
+    supplier?: string;
     supplierProductId: string;
     categoryId: string;
     name?: string;
@@ -202,8 +207,8 @@ export const api = {
     const res = await client.post('/supplier/import', dto);
     return res.data;
   },
-  syncSupplierStock: async () => {
-    const res = await client.post('/supplier/sync-stock');
+  syncSupplierStock: async (supplier?: string) => {
+    const res = await client.post('/supplier/sync-stock', supplier ? { supplier } : {});
     return res.data;
   },
 

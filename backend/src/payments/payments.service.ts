@@ -344,7 +344,7 @@ export class PaymentsService {
     if (order.status !== 'PAID') return null; // never deliver unpaid goods
     if (order.fulfillmentStatus === 'DELIVERED' && order.licenseKey) return order;
 
-    if (order.product?.source === 'HUBX' && order.product.supplierProductId) {
+    if (order.product?.supplierProductId && ['HUBX', 'GEMINIPRO'].includes(order.product?.source || '')) {
       await this.supplierService.fulfillOrder(order.id); // sets licenseKey + DELIVERED, throws on failure
     } else {
       const key = await this.licensesService.allocateKeyForOrder(

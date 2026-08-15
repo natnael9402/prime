@@ -87,7 +87,8 @@ export default function SupplierImportModal({
   onClose: () => void;
   onImported: () => Promise<void> | void;
 }) {
-  const supplierImage = supplierProduct.image_url || supplierProduct.imageUrl || supplierProduct.image || '';
+  const supplierCost = Number(supplierProduct.priceUSD ?? supplierProduct.price_usdt ?? 0) || 0;
+  const supplierImage = supplierProduct.imageUrl || supplierProduct.image_url || supplierProduct.image || '';
   const [form, setForm] = useState({
     name: supplierProduct.name || '',
     categoryId: defaultCategoryId || categories[0]?.id || '',
@@ -132,13 +133,13 @@ export default function SupplierImportModal({
     }
 
     const margin = Number(form.marginMultiplier) || globalMargin;
-    const base = Math.round((Number(supplierProduct.price_usdt) || 0) * rate * margin);
+    const base = Math.round((Number(supplierCost) || 0) * rate * margin);
     return {
       base,
       final: Math.max(1, Math.round(base * (1 - discount / 100))),
       discount,
     };
-  }, [form.priceMode, form.manualPrice, form.marginMultiplier, form.discountPct, settings, supplierProduct.price_usdt]);
+  }, [form.priceMode, form.manualPrice, form.marginMultiplier, form.discountPct, settings, supplierCost]);
 
   const allImages = useMemo(() => uniqueUrls([form.bannerUrl, ...galleryUrls]), [form.bannerUrl, galleryUrls]);
   const translatedCount = useMemo(
@@ -198,7 +199,8 @@ export default function SupplierImportModal({
       setImporting(true);
       setError('');
       await api.importSupplierProduct({
-        supplierProductId: supplierProduct.id,
+        supplier: supplierProduct.supplier,
+        supplierProductId: String(supplierProduct.id),
         categoryId: form.categoryId,
         name: form.name.trim(),
         shortDesc: form.shortDesc.trim(),
@@ -254,7 +256,7 @@ export default function SupplierImportModal({
                   </div>
                 )}
                 <span className="absolute top-3 left-3 px-2 py-1 rounded-full bg-sky-500 text-white text-[9px] font-black">
-                  HubX ${supplierProduct.price_usdt}
+                  ${supplierProduct.supplierLabel || 'Supplier'} ${supplierCost}
                 </span>
               </div>
               <div className="p-4 space-y-2">
@@ -351,7 +353,7 @@ export default function SupplierImportModal({
             <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-[12px] font-black text-white">Pricing</h3>
-                <span className="text-[10px] text-slate-500">Cost ${supplierProduct.price_usdt} USDT</span>
+                <span className="text-[10px] text-slate-500">Cost ${supplierCost} USD</span>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {[

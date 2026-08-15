@@ -10,6 +10,8 @@ import {
 import SupplierImportModal from '@/components/SupplierImportModal';
 
 export default function AdminSupplierPage() {
+  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [activeSupplier, setActiveSupplier] = useState('HUBX');
   const [status, setStatus] = useState<any>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -24,17 +26,22 @@ export default function AdminSupplierPage() {
 
   useEffect(() => {
     loadAll();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSupplier]);
 
   const loadAll = async () => {
     try {
       setLoading(true);
       setError('');
-      const [st, cats, sets] = await Promise.all([
-        api.getSupplierStatus(),
+      setProducts([]);
+      setStatus(null);
+      const [sups, st, cats, sets] = await Promise.all([
+        api.getSuppliers(),
+        api.getSupplierStatus(activeSupplier),
         api.getCategories(),
         api.getSettings(),
       ]);
+      setSuppliers(sups);
       setStatus(st);
       setCategories(cats);
       setSettings(sets);
@@ -43,7 +50,7 @@ export default function AdminSupplierPage() {
       }
       if (st.configured) {
         try {
-          const prods = await api.getSupplierProducts();
+          const prods = await api.getSupplierProducts(activeSupplier);
           setProducts(prods);
         } catch (err: any) {
           setError(err.response?.data?.message || err.message);
@@ -63,7 +70,7 @@ export default function AdminSupplierPage() {
   const handleSync = async () => {
     try {
       setSyncing(true);
-      const res = await api.syncSupplierStock();
+      const res = await api.syncSupplierStock(activeSupplier);
       alert(`Synced ${res.synced} products`);
       await loadAll();
     } catch (err: any) {
@@ -73,6 +80,8 @@ export default function AdminSupplierPage() {
     }
   };
 
+  const activeInfo = suppliers.find((s) => s.code === activeSupplier);
+
   return (
     <div className="min-h-screen flex flex-col">
       <AdminNavbar />
@@ -81,11 +90,35 @@ export default function AdminSupplierPage() {
         <div className="fade-up">
           <h1 className="text-xl font-black text-white flex items-center gap-2">
             <Layers className="w-5 h-5 text-sky-400" />
-            HubX Supplier
+            Suppliers
           </h1>
           <p className="text-[11px] text-slate-500">
-            Import products from the reseller API. Cost is in USDT — your sell price is computed by the pricing engine.
+            Import products from reseller APIs. Cost is in USD — your sell price is computed by the pricing engine.
           </p>
+        </div>
+
+        {/* Supplier switcher */}
+        <div className="flex items-center gap-1.5 fade-up">
+          {suppliers.map((s) => {
+            const active = activeSupplier === s.code;
+            return (
+              <button
+                key={s.code}
+                onClick={() => setActiveSupplier(s.code)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-[11px] font-black uppercase border transition-all ${
+                  active
+                    ? 'bg-sky-500/15 text-sky-300 border-sky-500/30'
+                    : 'bg-white/[0.03] text-slate-500 border-white/10 hover:text-white'
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${s.configured ? 'bg-emerald-400' : 'bg-slate-600'}`} />
+                {s.label}
+                {s.configured && s.keyMode === 'test' && (
+                  <span className="text-[8px] text-violet-300">TEST</span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Status cards */}
@@ -100,7 +133,9 @@ export default function AdminSupplierPage() {
             </div>
             {!status?.configured && (
               <p className="text-[10px] text-slate-500 leading-snug">
-                Get a free key: HubX bot → Reseller API → Get Sandbox Key, then set SUPPLIER_API_KEY in backend/.env
+                {activeSupplier === 'GEMINIPRO'
+                  ? 'Set GEMINIPRO_API_KEY="rsp_live_…" in backend/.env and restart the backend.'
+                  : 'Get a free key: HubX bot → Reseller API → Get Sandbox Key, then set SUPPLIER_API_KEY in backend/.env'}
               </p>
             )}
           </div>
@@ -111,7 +146,7 @@ export default function AdminSupplierPage() {
               <Wallet className="w-4 h-4 text-sky-400" />
             </div>
             <div className="text-base font-black text-white">
-              {status?.balance ? `${status.balance.balance_usdt} USDT` : '—'}
+              {status?.balanceAmount != null ? `${status.balanceAmount} ${status.balanceCurrency}` : '—'}
             </div>
             {status?.balanceError && <p className="text-[10px] text-rose-400">{status.balanceError}</p>}
           </div>
@@ -196,7 +231,7 @@ export default function AdminSupplierPage() {
                 <thead>
                   <tr>
                     <th>Product</th>
-                    <th>Cost (USDT)</th>
+                    <th>Cost (USD)</th>
                     <th>Sell Price (ETB)</th>
                     <th>Stock</th>
                     <th>Status</th>
@@ -212,7 +247,7 @@ export default function AdminSupplierPage() {
                         <div className="font-bold text-slate-100">{p.name}</div>
                         <div className="text-[10px] text-slate-500 font-mono">{p.slug}</div>
                       </td>
-                      <td className="font-bold text-sky-300">${p.price_usdt}</td>
+                      <td className="font-bold text-sky-300">${p.priceUSD}</td>
                       <td className="font-black text-amber-400">{p.pricePreviewETB?.toLocaleString()} ETB</td>
                       <td>
                         <span className={`px-2 py-0.5 rounded-full font-bold text-[10px] ${
@@ -246,11 +281,15 @@ export default function AdminSupplierPage() {
         ) : (
           <div className="fade-up glass rounded-3xl p-10 text-center space-y-3">
             <Package className="w-10 h-10 text-slate-600 mx-auto" />
-            <p className="text-sm font-bold text-slate-300">Connect your HubX reseller key to see the catalog</p>
+            <p className="text-sm font-bold text-slate-300">Connect your {activeInfo?.label || 'supplier'} reseller key to see the catalog</p>
             <p className="text-[11px] text-slate-500 max-w-md mx-auto leading-relaxed">
-              1. Open the HubX Telegram bot → Reseller API → Get Sandbox Key (free).<br />
-              2. Add <code className="text-amber-400">SUPPLIER_API_KEY="rsk_test_…"</code> to backend/.env.<br />
-              3. Restart the backend — this page lights up.
+              {activeSupplier === 'GEMINIPRO' ? (
+                <>Add <code className="text-amber-400">GEMINIPRO_API_KEY="rsp_live_…"</code> to backend/.env and restart the backend — this page lights up.</>
+              ) : (
+                <>1. Open the HubX Telegram bot → Reseller API → Get Sandbox Key (free).<br />
+                2. Add <code className="text-amber-400">SUPPLIER_API_KEY="rsk_test_…"</code> to backend/.env.<br />
+                3. Restart the backend — this page lights up.</>
+              )}
             </p>
           </div>
         )}

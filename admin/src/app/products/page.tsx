@@ -204,9 +204,9 @@ export default function AdminProductsPage() {
                   }`}>
                     {p.stock} keys
                   </span>
-                  {p.source === 'HUBX' && (
+                  {(p.source === 'HUBX' || p.source === 'GEMINIPRO') && (
                     <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-black bg-sky-500 text-white">
-                      HubX
+                      {p.source === 'HUBX' ? 'HubX' : 'GeminiPro'}
                     </span>
                   )}
                   {(p.discountPct > 0) && (
