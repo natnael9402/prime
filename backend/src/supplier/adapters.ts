@@ -69,15 +69,15 @@ async function http<T>(
 /** Split a supplier-delivered value into individual item strings. */
 export function valueToItems(value: any): string[] {
   if (value == null) return [];
-  if (Array.isArray(value)) return value.map((v) => String(v));
+  if (Array.isArray(value)) return value.map((v) => String(v).trim()).filter(Boolean);
   if (typeof value === 'string') {
     try {
       const parsed = JSON.parse(value);
-      if (Array.isArray(parsed)) return parsed.map((v) => String(v));
+      if (Array.isArray(parsed)) return parsed.map((v) => String(v).trim()).filter(Boolean);
     } catch {
       /* plain string */
     }
-    return [value];
+    return [value.trim()].filter(Boolean);
   }
   return [JSON.stringify(value)];
 }
