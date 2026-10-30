@@ -247,7 +247,7 @@ export const api = {
   },
 
   // Image upload → Cloudflare R2 → { url, key }
-  uploadImage: async (file: File, folder: 'products' | 'cards' = 'products') => {
+  uploadImage: async (file: File, folder: 'products' | 'cards' | 'broadcasts' = 'products') => {
     const fd = new FormData();
     fd.append('file', file);
     fd.append('folder', folder);
@@ -258,8 +258,31 @@ export const api = {
   },
 
   // Previous R2 uploads for the library picker
-  listUploadedImages: async (folder: 'products' | 'cards' = 'cards') => {
+  listUploadedImages: async (folder: 'products' | 'cards' | 'broadcasts' = 'cards') => {
     const res = await client.get('/uploads/images', { params: { folder } });
     return res.data.images as { key: string; url: string; size: number; lastModified: string | null }[];
+  },
+
+  // Broadcast Center
+  getBroadcastPresets: async () => {
+    const res = await client.get('/broadcasts/admin/presets');
+    return res.data;
+  },
+  getBroadcasts: async () => {
+    const res = await client.get('/broadcasts/admin/list');
+    return res.data;
+  },
+  getBroadcast: async (id: string) => {
+    const res = await client.get(`/broadcasts/admin/${id}`);
+    return res.data;
+  },
+  sendBroadcast: async (dto: {
+    productId: string;
+    caption: string;
+    imageUrl: string;
+    buttonText: string;
+  }) => {
+    const res = await client.post('/broadcasts/admin/send', dto);
+    return res.data;
   },
 };

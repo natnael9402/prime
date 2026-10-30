@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, Package, ShoppingBag, KeyRound, HandCoins, Layers, LayoutGrid, LogOut } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingBag, KeyRound, HandCoins, Layers, LayoutGrid, Megaphone, LogOut } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 import { setAdminToken } from '@/lib/api';
 
@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: '/orders', label: 'Orders', icon: ShoppingBag },
   { href: '/affiliates', label: 'Affiliates', icon: HandCoins },
   { href: '/hero', label: 'Home Cards', icon: LayoutGrid },
+  { href: '/broadcast', label: 'Broadcast', icon: Megaphone },
 ];
 
 export default function AdminNavbar() {

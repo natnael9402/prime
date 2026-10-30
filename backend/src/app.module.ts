@@ -16,6 +16,7 @@ import { SupplierModule } from './supplier/supplier.module';
 import { AuthModule } from './auth/auth.module';
 import { HomeCardsModule } from './home-cards/home-cards.module';
 import { R2Module } from './r2/r2.module';
+import { BroadcastModule } from './broadcast/broadcast.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { R2Module } from './r2/r2.module';
     AuthModule,
     HomeCardsModule,
     R2Module,
+    BroadcastModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

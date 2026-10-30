@@ -208,3 +208,21 @@ model StockAlert {
 
   @@unique([productId, telegramUserId])
 }
+
+model Broadcast {
+  id             String    @id @default(uuid())
+  productId      String?
+  productName    String
+  productUrl     String
+  imageUrl       String
+  caption        String
+  buttonText     String
+  status         String    @default("RUNNING") // RUNNING | COMPLETED | FAILED
+  total          Int       @default(0)
+  sent           Int       @default(0)
+  failed         Int       @default(0)
+  failureSummary String    @default("{}")
+  error          String?
+  createdAt      DateTime  @default(now())
+  completedAt    DateTime?
+}

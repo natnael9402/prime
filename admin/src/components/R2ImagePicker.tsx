@@ -19,7 +19,7 @@ export default function R2ImagePicker({
   accent = 'amber',
   onAdd,
 }: {
-  folder?: 'products' | 'cards';
+  folder?: 'products' | 'cards' | 'broadcasts';
   accent?: 'amber' | 'sky';
   onAdd: (url: string) => void;
 }) {
