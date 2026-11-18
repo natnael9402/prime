@@ -181,7 +181,9 @@ export class GeminiProAdapter implements SupplierAdapter {
   code = 'GEMINIPRO';
   label = 'GeminiPro';
   keyPrefix = 'rsp_';
-  private static DEFAULT_BASE = 'https://api-geminipro.ignorelist.com/api/reseller/v1';
+  // Supplier migrated domains (Nov 2026): api-geminipro.ignorelist.com now
+  // serves a cert for api.renqis.online — every call fails TLS validation.
+  private static DEFAULT_BASE = 'https://api.renqis.online/api/reseller/v1';
 
   constructor(private config: ConfigService) {}
 
