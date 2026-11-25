@@ -7,5 +7,6 @@ import { HomeCardsService } from './home-cards.service';
   imports: [PrismaModule],
   controllers: [HomeCardsController],
   providers: [HomeCardsService],
+  exports: [HomeCardsService],
 })
 export class HomeCardsModule {}
