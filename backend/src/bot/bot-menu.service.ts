@@ -220,8 +220,9 @@ export class BotMenuService {
       if (n.includes('coursera')) return 1;
       if (n.includes('duolingo')) return 2;
       if (n.includes('adobe')) return 3;
-      if (/\bapi\b/.test(n)) return 4;
-      return 5;
+      if (n.includes('n8n')) return 4;
+      if (/\bapi\b/.test(n)) return 5;
+      return 6;
     };
     const sorted = [...filtered].sort((a, b) => priority(a) - priority(b));
     const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));

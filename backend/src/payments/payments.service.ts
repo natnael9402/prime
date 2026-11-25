@@ -399,11 +399,69 @@ export class PaymentsService {
   /** Terminal delivery failure (queue exhausted) — flag for admin retry. */
   async markFulfillmentFailed(orderId: string, message: string) {
     try {
-      await this.prisma.order.update({
+      const order = await this.prisma.order.update({
         where: { id: orderId },
         data: { fulfillmentStatus: 'FAILED', fulfillmentError: message.slice(0, 500) },
+        include: { product: true },
       });
+      await this.notifyDeliveryFailed(order, message);
     } catch {}
+  }
+
+  /**
+   * PAID-but-undelivered alert: DM the owner with full order context, and
+   * reassure the customer with a "we're on it — contact support" message.
+   */
+  private async notifyDeliveryFailed(order: any, message: string) {
+    const esc = (v: any) =>
+      String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const productName = esc(order.product?.name || 'Unknown product');
+    const amount = `${Number(order.amount ?? 0).toLocaleString()} ${order.currency || 'ETB'}`;
+    const customer = order.customerName ? esc(order.customerName) : 'Customer';
+    const username = order.telegramUsername ? `@${order.telegramUsername}` : 'no username';
+    const reason = esc(message).slice(0, 300);
+
+    // 1) Owner alert — everything needed to fix it by hand, one tap away
+    void this.telegramService
+      .notifyAdmin(
+        `🚨 <b>DELIVERY FAILED — action needed</b>\n\n` +
+          `📦 <b>${productName}</b>\n` +
+          `🧾 <code>${esc(order.txRef)}</code>\n` +
+          `💰 ${amount}\n` +
+          `👤 ${customer} · ${esc(username)}\n` +
+          `🆔 <code>${esc(order.telegramUserId || '—')}</code>\n\n` +
+          `❌ <i>${reason}</i>\n\n` +
+          `⚡ Deliver it manually from Admin → Orders, then the customer gets it automatically.`,
+        {
+          inline_keyboard: [
+            [{ text: '🛠 Open Admin Orders', url: 'https://admin.187.127.92.55.sslip.io/orders' }],
+            ...(order.telegramUsername
+              ? [[{ text: `💬 Chat with ${username}`, url: `https://t.me/${order.telegramUsername}` }]]
+              : []),
+          ],
+        },
+      )
+      .catch(() => undefined);
+
+    // 2) Customer reassurance — wait, don't re-order, support is one tap away
+    if (order.telegramUserId) {
+      void this.telegramService
+        .sendMessage(
+          order.telegramUserId,
+          `⏳ <b>Payment confirmed — your order is being prepared</b>\n\n` +
+            `📦 <b>${productName}</b>\n` +
+            `🧾 <code>${esc(order.txRef)}</code>\n\n` +
+            `✅ Your payment was received successfully.\n` +
+            `🛠 Our team has been notified and is completing your delivery right now — it will arrive <b>right here in this chat</b>. No need to order again.\n\n` +
+            `💬 ማንኛውንም ጥያቄ <b>@Kinetsupports</b> — order reference አዝነው ይላኩ።`,
+          {
+            inline_keyboard: [
+              [{ text: '💬 Contact Support', url: 'https://t.me/Kinetsupports', style: 'primary' }],
+            ],
+          },
+        )
+        .catch(() => undefined);
+    }
   }
 
   private async reloadOrder(orderId: string) {
