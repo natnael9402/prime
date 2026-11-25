@@ -5,6 +5,7 @@ import { PaymentsService } from '../payments/payments.service';
 import { AffiliatesService } from '../affiliates/affiliates.service';
 import { RewardsService } from '../rewards/rewards.service';
 import { UsersService } from '../users/users.service';
+import { isSupplierBacked } from '../supplier/adapters';
 import { TelegramService, escapeHtml, tgEmoji } from '../telegram/telegram.service';
 import { BotStateService } from './bot-state.service';
 import { BotEmojiService } from './bot-emoji.service';
@@ -78,7 +79,7 @@ export class BotCheckoutService {
       return;
     }
 
-    const supplierBacked = ['HUBX', 'GEMINIPRO'].includes(product.source || '');
+    const supplierBacked = isSupplierBacked(product.source);
     if (!supplierBacked && product.stock < qty) {
       await this.telegram.sendMessage(
         params.chatId,
@@ -176,7 +177,7 @@ export class BotCheckoutService {
         ...(banner ? { photo_url: banner, photo_width: 800, photo_height: 450 } : {}),
         reply_markup: {
           inline_keyboard: [
-            [{ text: `💳 Pay ${finalTotal.toLocaleString()} ETB · Chapa`, pay: true }],
+            [{ text: `💳 Pay ${finalTotal.toLocaleString()} ETB (Birr)`, pay: true }],
             [{ text: 'Cancel', callback_data: `inv:cancel:${txRef}`, ...this.emojis.btnIcon('cancel') }],
           ],
         },
@@ -238,16 +239,16 @@ export class BotCheckoutService {
 
       await this.telegram.sendMessage(
         params.chatId,
-        `💳 <b>Chapa Checkout Ready</b>\n\n` +
+        `💳 <b>Instant Checkout Ready</b>\n\n` +
           `${summary}\n` +
           (vipDiscountPct > 0 ? `🌟 VIP Discount: -${vipDiscountPct}%\n` : '') +
           (creditUsed > 0 ? `🎟 Store Credit: -${creditUsed.toLocaleString()} ETB\n` : '') +
-          `💰 Total: <b>${finalTotal.toLocaleString()} ETB</b>\n` +
+          `💰 Total: <b>${finalTotal.toLocaleString()} ETB (Birr)</b>\n` +
           `🔖 Ref: <code>${escapeHtml(init.cartRef)}</code>\n\n` +
-          `Tap <b>Pay with Chapa</b> below, then return here — your order &amp; key arrive automatically!`,
+          `Tap <b>Pay in Birr</b> below, then return here — your order &amp; key arrive automatically!`,
         {
           inline_keyboard: [
-            [{ text: `💳 Pay ${finalTotal.toLocaleString()} ETB (Chapa)`, url: init.paymentUrl, style: 'success' }],
+            [{ text: `💳 Pay ${finalTotal.toLocaleString()} ETB (Birr)`, url: init.paymentUrl, style: 'success' }],
             [{ text: '🔄 Check Payment Status', callback_data: `pv:${init.cartRef}`, style: 'primary' }],
             [{ text: '🏠 Back to Store', callback_data: 'h:0' }],
           ],
@@ -311,7 +312,7 @@ export class BotCheckoutService {
         );
         return;
       }
-      const supplierBacked = ['HUBX', 'GEMINIPRO'].includes(o.product.source || '');
+      const supplierBacked = isSupplierBacked(o.product.source);
       if (!supplierBacked && o.product.stock < o.quantity) {
         await this.telegram.answerPreCheckoutQuery(
           query.id,

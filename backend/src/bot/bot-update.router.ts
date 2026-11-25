@@ -127,7 +127,7 @@ export class BotUpdateRouter implements OnModuleInit {
 
     if (text.startsWith('/shop')) {
       await this.state.setState(telegramId, { inputStep: null });
-      await this.menu.showHome(chatId, telegramId, lang);
+      await this.menu.showCatalog(chatId, telegramId, lang, 'all', 0);
       return;
     }
 
@@ -177,7 +177,7 @@ export class BotUpdateRouter implements OnModuleInit {
       await this.state.setState(telegramId, { inputStep: null });
       switch (dock) {
         case 'SHOP':
-          await this.menu.showHome(chatId, telegramId, lang);
+          await this.menu.showCatalog(chatId, telegramId, lang, 'all', 0);
           return;
         case 'ORDERS':
           await this.menu.showOrders(chatId, telegramId, lang, 0);
@@ -266,6 +266,12 @@ export class BotUpdateRouter implements OnModuleInit {
       return;
     }
 
+    if (data.startsWith('pr:')) {
+      const [, productId, qtyStr] = data.split(':');
+      await this.menu.refreshProduct(chatId, telegramId, lang, productId, Number(qtyStr || 1), cb.id, messageId, wasPhoto);
+      return;
+    }
+
     if (data.startsWith('pd:')) {
       const productId = data.slice(3);
       await this.telegram.answerCallbackQuery(cb.id);
@@ -303,7 +309,7 @@ export class BotUpdateRouter implements OnModuleInit {
 
     if (data.startsWith('al:')) {
       const productId = data.slice(3);
-      await this.menu.subscribeStockAlert(chatId, from, productId, cb.id, lang);
+      await this.menu.subscribeStockAlert(chatId, from, productId, cb.id, lang, messageId, wasPhoto);
       return;
     }
 

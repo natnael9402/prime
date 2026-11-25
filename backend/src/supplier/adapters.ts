@@ -3,6 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 
 export const UNLIMITED_STOCK = 100000;
+export const SUPPLIER_CODES = ['HUBX', 'GEMINIPRO', 'DANTEHUB'] as const;
+
+export function isSupplierBacked(source?: string | null): boolean {
+  return SUPPLIER_CODES.includes((source || '').toUpperCase() as any);
+}
 
 /** Supplier-normalized product shape consumed by admin UI + import + sync. */
 export interface NormalizedSupplierProduct {
@@ -53,8 +58,9 @@ async function http<T>(
   } catch (err: any) {
     const status = err?.response?.status;
     const msg =
+      err?.response?.data?.error?.message ||
       err?.response?.data?.message ||
-      err?.response?.data?.error ||
+      (typeof err?.response?.data?.error === 'string' ? err.response.data.error : '') ||
       err?.message ||
       'Supplier request failed';
     logger.warn(`${label} ${method.toUpperCase()} ${url} → ${status}: ${msg}`);
@@ -272,9 +278,139 @@ export class GeminiProAdapter implements SupplierAdapter {
   }
 }
 
+// ---------------- DanteHub ----------------
+
+function cleanDanteText(raw?: string | null): string | undefined {
+  if (!raw) return undefined;
+  const cleaned = String(raw).replace(/\[\[\d{10,25}\]\]\s*/g, '').trim();
+  return cleaned || undefined;
+}
+
+export class DanteHubAdapter implements SupplierAdapter {
+  code = 'DANTEHUB';
+  label = 'DanteHub';
+  keyPrefix = 'dh_';
+  private static DEFAULT_BASE = 'https://dantehub.shop/api/public/v1';
+  private catalogCache: { items: NormalizedSupplierProduct[]; at: number } | null = null;
+
+  constructor(private config: ConfigService) {}
+
+  private get key(): string {
+    return (this.config.get<string>('DANTEHUB_API_KEY') || '').trim();
+  }
+
+  get configured(): boolean {
+    return this.key.startsWith(this.keyPrefix) && this.key.length > 16;
+  }
+
+  get keyMode(): 'test' | 'live' | 'none' {
+    if (!this.configured) return 'none';
+    if (this.key.startsWith('dh_test_')) return 'test';
+    return 'live';
+  }
+
+  get baseUrl(): string {
+    return (this.config.get<string>('DANTEHUB_BASE_URL') || DanteHubAdapter.DEFAULT_BASE).replace(/\/$/, '');
+  }
+
+  private headers() {
+    return { Authorization: `Bearer ${this.key}`, 'Content-Type': 'application/json' };
+  }
+
+  private req<T = any>(method: 'get' | 'post', path: string, body?: any): Promise<T> {
+    if (!this.configured) {
+      throw new ServiceUnavailableException('DanteHub key not configured. Set DANTEHUB_API_KEY (dh_live_…).');
+    }
+    return http<T>(this.label, method, `${this.baseUrl}${path}`, this.headers(), body);
+  }
+
+  async balance() {
+    const bal = await this.req('get', '/balance');
+    return { amount: String(bal.balance ?? '0'), currency: String(bal.currency || 'USDT') };
+  }
+
+  private normalize(p: any): NormalizedSupplierProduct {
+    const id = String(p.id);
+    const title = String(p.title || p.name || id);
+    const slugTitle = title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '')
+      .slice(0, 40);
+    const inStock = p.in_stock !== false && p.stock !== 0;
+    const unlimited = inStock && (p.stock === null || p.stock === undefined || Number(p.stock) >= UNLIMITED_STOCK);
+    const stock = !inStock ? 0 : unlimited ? UNLIMITED_STOCK : Math.max(0, Number(p.stock) || 0);
+
+    return {
+      id,
+      slug: `dh-${id.slice(0, 8)}-${slugTitle || 'item'}`,
+      name: title,
+      description: cleanDanteText(p.description),
+      priceUSD: Number(p.price) || 0,
+      stock,
+      unlimited,
+      imageUrl: p.image_url || p.imageUrl || p.image || null,
+      supplier: this.code,
+    };
+  }
+
+  async listProducts(forceRefresh = false): Promise<NormalizedSupplierProduct[]> {
+    // Respect DanteHub's 60 req/min guideline by caching the 1200+ item catalog for 45s
+    if (!forceRefresh && this.catalogCache && Date.now() - this.catalogCache.at < 45_000) {
+      return this.catalogCache.items;
+    }
+    const data = await this.req('get', '/products');
+    const items = ((data.products || []) as any[]).map((p) => this.normalize(p));
+    this.catalogCache = { items, at: Date.now() };
+    return items;
+  }
+
+  async getProduct(id: string): Promise<NormalizedSupplierProduct> {
+    // DanteHub has no GET /products/:id endpoint — resolve from catalogue
+    const list = await this.listProducts(false);
+    let hit = list.find((p) => p.id === id);
+    if (!hit) {
+      const fresh = await this.listProducts(true);
+      hit = fresh.find((p) => p.id === id);
+    }
+    if (!hit) throw new BadRequestException('DanteHub product not found');
+    return hit;
+  }
+
+  async createOrder(supplierProductId: string, quantity: number, idempotencyKey?: string): Promise<SupplierOrderResult> {
+    const qty = Math.max(1, Math.min(20, Math.floor(quantity || 1)));
+    const safeRef = (idempotencyKey || `DH-${Date.now()}`)
+      .replace(/[^A-Za-z0-9._:-]/g, '-')
+      .slice(0, 64);
+
+    const res = await this.req('post', '/orders', {
+      product_id: supplierProductId,
+      qty,
+      ref: safeRef,
+    });
+    const o = res.order || {};
+    return {
+      supplierOrderId: String(o.order_id || o.ref || safeRef),
+      items: valueToItems(o.delivery),
+      status: String(o.status || 'processing'),
+    };
+  }
+
+  async getOrder(supplierOrderId: string): Promise<SupplierOrderResult> {
+    const data = await this.req('get', `/orders/${encodeURIComponent(supplierOrderId)}`);
+    const o = data.order || {};
+    return {
+      supplierOrderId: String(o.order_id || supplierOrderId),
+      items: valueToItems(o.delivery),
+      status: String(o.status || 'unknown'),
+    };
+  }
+}
+
 /** All known suppliers, keyed by product.source. */
 export function buildSupplierRegistry(config: ConfigService): Record<string, SupplierAdapter> {
   const hubx = new HubxAdapter(config);
   const gemini = new GeminiProAdapter(config);
-  return { [hubx.code]: hubx, [gemini.code]: gemini };
+  const dante = new DanteHubAdapter(config);
+  return { [hubx.code]: hubx, [gemini.code]: gemini, [dante.code]: dante };
 }

@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService, escapeHtml, tgEmoji } from '../telegram/telegram.service';
 import { LicensesService } from '../licenses/licenses.service';
 import { SupplierService } from '../supplier/supplier.service';
+import { isSupplierBacked } from '../supplier/adapters';
 
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
@@ -332,7 +333,7 @@ export class RewardsService {
 
     try {
       let licenseKey: string | null = null;
-      if (tier.product.supplierProductId && ['HUBX', 'GEMINIPRO'].includes(tier.product.source || '')) {
+      if (tier.product.supplierProductId && isSupplierBacked(tier.product.source)) {
         const res = await this.supplierService.fulfillOrder(order.id);
         licenseKey = res?.items?.join('\n') || null;
       } else {

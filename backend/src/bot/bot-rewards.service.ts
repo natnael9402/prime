@@ -93,7 +93,7 @@ export class BotRewardsService {
     }
 
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(data.inviteLink)}&text=${encodeURIComponent(
-      'Get instant digital keys on Access Store — pay with Chapa right in Telegram!',
+      'Get instant digital keys & AI APIs on Access Store — pay instant in Birr right in Telegram!',
     )}`;
 
     keyboard.push([
@@ -186,7 +186,7 @@ export class BotRewardsService {
 
     const stats = await this.affiliates.getStats(existing.code);
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(stats.link)}&text=${encodeURIComponent(
-      'Get instant digital keys on Access Store — pay with Chapa right in Telegram!',
+      'Get instant digital keys & AI APIs on Access Store — pay instant in Birr right in Telegram!',
     )}`;
 
     const recentText = stats.recentSales.length

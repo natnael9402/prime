@@ -6,6 +6,7 @@ import { OrdersService } from '../orders/orders.service';
 import { StockAlertsService } from '../stock-alerts/stock-alerts.service';
 import { PaymentsService } from '../payments/payments.service';
 import { UsersService } from '../users/users.service';
+import { SupplierService } from '../supplier/supplier.service';
 import {
   TelegramService,
   InlineButton,
@@ -17,7 +18,7 @@ import { BotStateService } from './bot-state.service';
 import { BotEmojiService } from './bot-emoji.service';
 import { formatDeliveryForTelegram } from './bot-delivery.formatter';
 
-const PAGE_SIZE = 6;
+const PAGE_SIZE = 10;
 
 @Injectable()
 export class BotMenuService {
@@ -29,11 +30,26 @@ export class BotMenuService {
     private readonly stockAlerts: StockAlertsService,
     private readonly payments: PaymentsService,
     private readonly users: UsersService,
+    private readonly supplier: SupplierService,
     private readonly telegram: TelegramService,
     private readonly i18n: BotI18nService,
     private readonly state: BotStateService,
     private readonly emojis: BotEmojiService,
   ) {}
+
+  private cleanDescriptionAndWarranty(raw: string, title = ''): { text: string; hasWarranty: boolean } {
+    const cleaned = (raw || '')
+      .replace(/(?:ℹ️|⚠️|📌|•|\*|-|\s)*(?:\bno warranty\b|\bwithout warranty\b|\bwarranty:\s*none\b|\b0\s*days?\s*warranty\b|ዋስትና የለውም|ዋስትና የለም|ያለ ዋስትና)[^\n.!]*[.!]?/giu, '')
+      .replace(/\s*[·•|]\s*$/gm, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+    const combined = `${title}\n${cleaned}`;
+    const hasWarranty =
+      /(?:\b(?:full|lifetime|\d+\s*(?:day|days|d|month|months|m|year|years|y)|replacement)\s+warranty\b|\bwarranty\s*(?:included|available|covered)\b|ዋስትና\s*አለው|ሙሉ\s*ዋስትና)/iu.test(
+        combined,
+      );
+    return { text: cleaned, hasWarranty };
+  }
 
   private async showOrEditText(
     chatId: string | number,
@@ -70,26 +86,17 @@ export class BotMenuService {
   async showHome(chatId: string | number, telegramId: string, lang: BotLang, messageId?: number, wasPhoto?: boolean) {
     await this.emojis.warmUiPacks();
     const s = this.i18n.t(lang);
-    const [categories, cards, tgUser] = await Promise.all([
+    const [categories, allProducts, tgUser] = await Promise.all([
       this.products.getCategories(),
-      this.homeCards.listPublic(),
+      this.products.findAll(),
       this.prisma.tgUser.findUnique({ where: { telegramId } }),
     ]);
 
-    const heroCard = cards.find((c: any) => c.kind === 'hero') || cards[0];
-    const promoLines = cards
-      .slice(0, 2)
-      .map(
-        (c: any) =>
-          `${this.emojis.html('fire', '✨')} <b>${escapeHtml(c.title)}</b>${
-            c.subtitle ? `\n<i>${escapeHtml(c.subtitle)}</i>` : ''
-          }`,
-      )
-      .join('\n\n');
+    const vipPct = Math.min(95, Math.max(0, Number(tgUser?.customDiscountPct || 0)));
 
     const vipBadge =
-      tgUser?.customDiscountPct && tgUser.customDiscountPct > 0
-        ? `${this.emojis.html('featured', '🌟')} VIP Discount: <b>${tgUser.customDiscountPct}% OFF</b>\n`
+      vipPct > 0
+        ? `${this.emojis.html('crown', '👑')} VIP Discount: <b>${vipPct}% OFF</b>\n`
         : '';
     const creditBadge =
       tgUser?.storeCredit && tgUser.storeCredit > 0
@@ -98,62 +105,88 @@ export class BotMenuService {
 
     const text =
       `${this.emojis.html('store', '💎')} <b>${s.welcomeTitle}</b>\n` +
-      `<i>${s.welcomeSub}</i>\n\n` +
-      (promoLines ? `${promoLines}\n\n` : '') +
+      `${this.emojis.html('shield', '🛡')} <i>${s.welcomeSub}</i>\n\n` +
       vipBadge +
       creditBadge +
-      `${this.emojis.html('shop', '👇')} <b>${s.pickCategory}</b>`;
+      `${this.emojis.html('fire', '⚡')} <b>${s.featuredGemini}</b>`;
 
-    const keyboard: InlineButton[][] = [
-      [
-        {
-          text: s.allProducts,
-          callback_data: 'c:all:0',
-          style: 'primary',
-          ...this.emojis.btnIcon('shop'),
-        },
-        {
-          text: s.featured,
-          callback_data: 'c:featured:0',
-          ...this.emojis.btnIcon('featured'),
-        },
-      ],
-    ];
+    const keyboard: InlineButton[][] = [];
 
-    const catButtons: InlineButton[] = (categories as any[])
-      .filter((cat) => (cat._count?.products ?? 1) > 0)
-      .map((cat) => ({
-        text: cat.name,
-        callback_data: `c:${cat.slug}:0`,
-        ...this.emojis.btnIcon('product', cat.emojiId),
-      }));
+    // Home shows ONLY Gemini product(s) in the featured product buttons
+    const geminiProducts = allProducts.filter(
+      (p: any) => /gemini/i.test(p.name || '') || /gemini/i.test(p.slug || ''),
+    );
 
-    for (let i = 0; i < catButtons.length; i += 2) {
-      keyboard.push(catButtons.slice(i, i + 2));
-    }
-
-    if (heroCard && heroCard.linkType === 'product' && heroCard.productId) {
+    for (const p of geminiProducts.slice(0, 4)) {
+      const loc = this.i18n.localizeProduct(p, lang);
+      const finalPrice = vipPct > 0 ? Math.max(1, Math.round(p.price * (1 - vipPct / 100))) : p.price;
+      const emojiId = this.emojis.productEmojiId(p);
       keyboard.push([
         {
-          text: `${heroCard.title}`.slice(0, 48),
-          callback_data: `p:${heroCard.productId}`,
-          style: 'success',
-          ...this.emojis.btnIcon('fire'),
+          text: `${loc.name} · ${Number(finalPrice).toLocaleString()} ${p.currency || 'ETB'}`.slice(0, 56),
+          callback_data: `p:${p.id}`,
+          style: p.stock > 0 ? 'primary' : undefined,
+          ...(emojiId ? { icon_custom_emoji_id: emojiId } : {}),
         },
       ]);
     }
 
+    // Home categories: Shop & API Products
+    const apiCat = (categories as any[]).find((cat) => cat.slug === 'api-products');
+    const apiEmojiId = apiCat?.emojiId || '5978699612536448673';
     keyboard.push([
       {
-        text: 'Invite & Unlock',
+        text: `${s.shopCategory} (${allProducts.length})`,
+        callback_data: 'c:all:0',
+        style: 'primary',
+        ...this.emojis.btnIcon('shop'),
+      },
+      {
+        text: apiCat?._count?.products ? `${s.apiCategory} (${apiCat._count.products})` : s.apiCategory,
+        callback_data: 'c:api-products:0',
+        style: 'primary',
+        ...this.emojis.btnIcon('affiliate', apiEmojiId),
+      },
+    ]);
+
+    // Any extra custom categories beyond digital-products & api-products
+    const extraCats = (categories as any[]).filter(
+      (cat) => cat.slug !== 'digital-products' && cat.slug !== 'api-products' && (cat._count?.products ?? 1) > 0,
+    );
+    for (let i = 0; i < extraCats.length; i += 2) {
+      keyboard.push(
+        extraCats.slice(i, i + 2).map((cat) => {
+          const isVpn = cat.slug === 'vpns';
+          const count = cat._count?.products;
+          const label = isVpn ? `${s.vpnCategory}${count ? ` (${count})` : ''}` : cat.name;
+          return {
+            text: label,
+            callback_data: `c:${cat.slug}:0`,
+            ...(isVpn ? { style: 'primary' as const, ...this.emojis.btnIcon('shield') } : this.emojis.btnIcon('product', cat.emojiId)),
+          };
+        }),
+      );
+    }
+
+    keyboard.push([
+      {
+        text: lang === 'am' ? 'ጋብዘው ይሸለሙ' : 'Invite & Unlock',
         callback_data: 'rew:home',
         style: 'success',
         ...this.emojis.btnIcon('reward'),
       },
       {
-        text: lang === 'am' ? 'ትዕዛዞቼ' : 'Orders',
+        text: s.btnOrders,
         callback_data: 'ord:0',
         ...this.emojis.btnIcon('orders'),
+      },
+    ]);
+
+    keyboard.push([
+      {
+        text: s.btnSearch,
+        callback_data: 'srch:go',
+        ...this.emojis.btnIcon('search'),
       },
     ]);
 
@@ -180,20 +213,44 @@ export class BotMenuService {
     void this.users.trackEvent({ telegramId, eventType: 'CATEGORY_VIEW', categorySlug });
 
     const filtered = categorySlug === 'featured' ? all.filter((p: any) => p.isFeatured) : all;
-    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    // Owner-defined showcase order: Gemini → Coursera → Duolingo → Adobe → APIs → rest
+    const priority = (p: any): number => {
+      const n = String(p?.name || '').toLowerCase();
+      if (n.includes('gemini')) return 0;
+      if (n.includes('coursera')) return 1;
+      if (n.includes('duolingo')) return 2;
+      if (n.includes('adobe')) return 3;
+      if (/\bapi\b/.test(n)) return 4;
+      return 5;
+    };
+    const sorted = [...filtered].sort((a, b) => priority(a) - priority(b));
+    const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
     const safePage = Math.max(0, Math.min(page, totalPages - 1));
-    const slice = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+    const slice = sorted.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
     const vipPct = Math.min(95, Math.max(0, Number(tgUser?.customDiscountPct || 0)));
 
     await this.state.setState(telegramId, { lastCategorySlug: categorySlug });
 
     if (slice.length === 0) {
+      const emptyHeader =
+        categorySlug === 'api-products'
+          ? `${tgEmoji('5978699612536448673', '🔌')} <b>${s.apiCategory}</b>`
+          : `${this.emojis.html('orders', '📭')} <b>${s.allProducts}</b>`;
+      const emptyNote =
+        categorySlug === 'api-products'
+          ? lang === 'am'
+            ? 'የAPI ምርቶች በቅርቡ ይጨመራሉ — ለአሁኑ ሱቁን ይመልከቱ!'
+            : 'Claude, Codex &amp; AI API keys dropping soon — tap Shop to browse available items!'
+          : lang === 'am'
+            ? 'በዚህ ምድብ ውስጥ እስካሁን ምርት የለም።'
+            : 'No products in this category yet.';
       await this.showOrEditText(
         chatId,
-        `${this.emojis.html('orders', '📭')} <b>${s.allProducts}</b>\n<i>No products in this category yet.</i>`,
+        `${emptyHeader}\n\n<i>${emptyNote}</i>`,
         {
           inline_keyboard: [
-            [{ text: 'Back to Store', callback_data: 'h:0', style: 'primary', ...this.emojis.btnIcon('back') }],
+            [{ text: s.shopCategory, callback_data: 'c:all:0', style: 'primary', ...this.emojis.btnIcon('shop') }],
+            [{ text: s.backBtn, callback_data: 'h:0', ...this.emojis.btnIcon('back') }],
           ],
         },
         messageId,
@@ -205,9 +262,13 @@ export class BotMenuService {
     const title =
       categorySlug === 'all'
         ? `${this.emojis.html('shop', '🛍')} <b>${s.allProducts}</b>`
-        : categorySlug === 'featured'
-          ? `${this.emojis.html('featured', '⭐')} <b>${s.featured}</b>`
-          : `${this.emojis.html('product', '📂')} <b>${escapeHtml(categorySlug.toUpperCase())}</b>`;
+        : categorySlug === 'api-products'
+          ? `${tgEmoji('5978699612536448673', '🔌')} <b>${s.apiCategory}</b>`
+          : categorySlug === 'vpns'
+            ? `${this.emojis.html('shield', '🛡')} <b>${s.vpnCategory}</b>`
+            : categorySlug === 'featured'
+              ? `${this.emojis.html('featured', '⭐')} <b>${s.featured}</b>`
+              : `${this.emojis.html('product', '📂')} <b>${escapeHtml(categorySlug.toUpperCase())}</b>`;
 
     const subtitle =
       lang === 'am'
@@ -242,7 +303,7 @@ export class BotMenuService {
     }
 
     keyboard.push([
-      { text: 'Home', callback_data: 'h:0', ...this.emojis.btnIcon('back') },
+      { text: 'Home', callback_data: 'h:0', ...this.emojis.btnIcon('home') },
       { text: 'Search', callback_data: 'srch:go', ...this.emojis.btnIcon('search') },
     ]);
 
@@ -278,13 +339,14 @@ export class BotMenuService {
       });
     }
 
-    const s = this.i18n.t(lang);
-    const loc = this.i18n.localizeProduct(product, lang);
-    const [userState, tgUser] = await Promise.all([
+    const [userState, tgUser, notifyOn] = await Promise.all([
       this.state.getState(telegramId),
       this.prisma.tgUser.findUnique({ where: { telegramId } }),
+      product.stock <= 0 ? this.stockAlerts.isSubscribed(product.id, telegramId) : Promise.resolve(false),
     ]);
 
+    const s = this.i18n.t(lang);
+    const loc = this.i18n.localizeProduct(product, lang);
     const safeQty = Math.max(1, Math.min(product.stock > 0 ? Math.min(50, product.stock) : 1, qty));
     const vipPct = Math.min(95, Math.max(0, Number(tgUser?.customDiscountPct || 0)));
     const unitPrice =
@@ -293,9 +355,14 @@ export class BotMenuService {
 
     const prodEmojiId = this.emojis.productEmojiId(product);
     const icon = prodEmojiId ? tgEmoji(prodEmojiId, '🔑') : this.emojis.html('key', '🔑');
-    const priceIcon = this.emojis.html('money', '💰');
-    const zapIcon = this.emojis.html('fire', '⚡');
-    const checkIcon = this.emojis.html('success', '✓');
+    const descIcon = this.emojis.html(lang === 'am' ? 'lang' : 'details', '📝');
+    const starIcon = this.emojis.html('featured', '✨');
+    const shieldIcon = this.emojis.html('shield', '🛡');
+    const fireIcon = this.emojis.html('fire', '⚡');
+    const moneyIcon = this.emojis.html('money', '💵');
+    const stockIcon = this.emojis.html(product.stock > 0 ? 'rocket' : 'pending', '📦');
+    const timeIcon = this.emojis.html('pending', '🕒');
+    const checkIcon = this.emojis.html('success', '✅');
 
     const compareBase = vipPct > 0 ? product.price : product.originalPrice;
     const orig =
@@ -305,29 +372,55 @@ export class BotMenuService {
     const discountPct =
       compareBase && compareBase > unitPrice ? Math.round((1 - unitPrice / compareBase) * 100) : 0;
 
-    const featuresText = loc.features.slice(0, 3).map((f) => `${checkIcon} ${escapeHtml(f)}`).join('\n');
-    const stockLine =
-      product.stock > 0
-        ? `${zapIcon} <b>${s.instantDelivery}</b> · ${product.stock} left`
-        : `🔴 <b>${s.outOfStock}</b>`;
+    const { text: cleanDesc, hasWarranty } = this.cleanDescriptionAndWarranty(
+      loc.description || loc.shortDesc || product.description || '',
+      loc.name || product.name,
+    );
 
-    const caption =
-      `${icon} <b>${escapeHtml(loc.name)}</b>` +
-      (product.badge ? ` · <code>${escapeHtml(product.badge)}</code>` : '') +
-      `\n\n` +
-      `${priceIcon} <b>${unitPrice.toLocaleString()} ${product.currency}</b>${orig}` +
-      (discountPct > 0 ? ` <b>(-${discountPct}%)</b>` : '') +
-      (vipPct > 0 ? ` · ${this.emojis.html('featured', '🌟')} <i>VIP</i>` : '') +
-      `\n${stockLine}` +
-      (loc.shortDesc ? `\n\n${escapeHtml(loc.shortDesc)}` : '') +
-      (featuresText ? `\n\n${featuresText}` : '');
+    const featureLines = (loc.features || [])
+      .map((f) => this.cleanDescriptionAndWarranty(f).text)
+      .filter(Boolean)
+      .slice(0, 5)
+      .map((f) => `${checkIcon} ${escapeHtml(f)}`)
+      .join('\n');
+    const timeStr = new Date().toLocaleTimeString('en-GB', { hour12: false });
+
+    const parts: string[] = [
+      `${icon} <b>${escapeHtml(loc.name || product.name)}</b>`,
+    ];
+    if (cleanDesc) {
+      parts.push(`${descIcon} <b>${s.descLabel}:</b>\n${escapeHtml(cleanDesc)}`);
+    }
+    if (featureLines) {
+      parts.push(`${starIcon} <b>${s.benefitsLabel}:</b>\n${featureLines}`);
+    }
+    parts.push(
+      `${moneyIcon} <b>${s.priceLabel}:</b> <b>${unitPrice.toLocaleString()} ${product.currency}</b>${orig}` +
+        (discountPct > 0 ? ` <b>(-${discountPct}%)</b>` : '') +
+        (vipPct > 0 ? ` · ${this.emojis.html('crown', '👑')} <i>VIP</i>` : '') +
+        `\n${stockIcon} <b>${s.stockLabel}:</b> <b>${
+          product.stock >= 9999
+            ? lang === 'am'
+              ? 'ያለገደብ ይገኛል'
+              : 'Unlimited'
+            : product.stock > 0
+              ? `${product.stock} ${s.piecesUnit}`
+              : s.outOfStock
+        }</b>` +
+        (product.stock <= 0 ? `\n${this.emojis.html('bell', '🔔')} <i>${s.outOfStockNote}</i>` : '') +
+        (product.instantDelivery ? `\n${fireIcon} <b>${s.deliveryLabel}:</b> ${s.instantDeliveryText}` : '') +
+        (hasWarranty ? `\n${shieldIcon} <b>${s.warrantyLabel}:</b> ${s.warrantyAvailable}` : '') +
+        `\n${timeIcon} <i>${s.updatedLabel}:</i> <code>${timeStr}</code>`,
+    );
+
+    const text = parts.join('\n\n').slice(0, 3950);
 
     const keyboard: InlineButton[][] = [];
 
     if (product.stock > 0) {
       keyboard.push([
         { text: '−', callback_data: `pq:${product.id}:${Math.max(1, safeQty - 1)}` },
-        { text: `${safeQty}`, callback_data: 'noop' },
+        { text: `${s.qtyLabel}: ${safeQty}`, callback_data: 'noop' },
         { text: '+', callback_data: `pq:${product.id}:${Math.min(50, safeQty + 1)}` },
       ]);
       keyboard.push([
@@ -342,7 +435,7 @@ export class BotMenuService {
         const creditApply = Math.min(tgUser!.storeCredit, total - 1);
         keyboard.push([
           {
-            text: `Use ${creditApply.toLocaleString()} ETB Credit`,
+            text: s.useCreditBtn.replace('{amt}', creditApply.toLocaleString()),
             callback_data: `bc:${product.id}:${safeQty}`,
             style: 'primary',
             ...this.emojis.btnIcon('credit'),
@@ -351,38 +444,45 @@ export class BotMenuService {
       }
     } else {
       keyboard.push([
-        {
-          text: s.notifyMe,
-          callback_data: `al:${product.id}`,
-          style: 'primary',
-          ...this.emojis.btnIcon('bell'),
-        },
+        notifyOn
+          ? {
+              text: s.notifyOn,
+              callback_data: `al:${product.id}`,
+              style: 'success',
+              ...this.emojis.btnIcon('success'),
+            }
+          : {
+              text: s.notifyMe,
+              callback_data: `al:${product.id}`,
+              style: 'primary',
+              ...this.emojis.btnIcon('bell'),
+            },
       ]);
     }
 
     const backCat = userState.lastCategorySlug || 'all';
     keyboard.push([
-      { text: 'Details', callback_data: `pd:${product.id}`, ...this.emojis.btnIcon('details') },
-      { text: 'Share', switch_inline_query: loc.name.slice(0, 32), ...this.emojis.btnIcon('share') },
-      { text: 'Back', callback_data: `c:${backCat}:0`, ...this.emojis.btnIcon('back') },
+      { text: s.refreshBtn, callback_data: `pr:${product.id}:${safeQty}`, style: 'primary', ...this.emojis.btnIcon('pending') },
+      { text: s.shareBtn, switch_inline_query: (loc.name || product.name).slice(0, 32), ...this.emojis.btnIcon('share') },
+      { text: s.backBtn, callback_data: `c:${backCat}:0`, style: 'danger', ...this.emojis.btnIcon('back') },
     ]);
 
-    const markup = { inline_keyboard: keyboard };
-    const hasBanner = /^https?:\/\//i.test(product.bannerUrl || '');
+    await this.showOrEditText(chatId, text, { inline_keyboard: keyboard }, messageId, wasPhoto);
+  }
 
-    if (hasBanner) {
-      if (messageId && wasPhoto) {
-        const edited = await this.telegram.editMessageMedia(chatId, messageId, product.bannerUrl, caption, markup);
-        if (edited) return;
-      }
-      if (messageId && !wasPhoto) {
-        await this.telegram.deleteMessage(chatId, messageId);
-      }
-      const sent = await this.telegram.sendPhoto(chatId, product.bannerUrl, caption, markup);
-      if (sent) return;
-    }
-
-    await this.showOrEditText(chatId, caption, markup, messageId, wasPhoto);
+  async refreshProduct(
+    chatId: string | number,
+    telegramId: string,
+    lang: BotLang,
+    productId: string,
+    qty: number,
+    callbackId: string,
+    messageId: number,
+    wasPhoto: boolean,
+  ) {
+    await this.supplier.refreshProductStock(productId);
+    await this.telegram.answerCallbackQuery(callbackId, '🔄 Stock updated');
+    await this.showProduct(chatId, telegramId, lang, productId, qty, messageId, wasPhoto, false);
   }
 
   async showProductDetails(chatId: string | number, lang: BotLang, productId: string) {
@@ -392,32 +492,41 @@ export class BotMenuService {
     } catch {
       return;
     }
+    const s = this.i18n.t(lang);
     const loc = this.i18n.localizeProduct(product, lang);
     const prodEmojiId = this.emojis.productEmojiId(product);
     const icon = prodEmojiId ? tgEmoji(prodEmojiId, '📋') : this.emojis.html('details', '📋');
+    const { text: cleanDesc, hasWarranty } = this.cleanDescriptionAndWarranty(
+      loc.description || loc.shortDesc,
+      loc.name || product.name,
+    );
 
     const reqs = loc.requirements.length
-      ? `\n\n<b>Requirements:</b>\n${loc.requirements.map((r) => `• ${escapeHtml(r)}`).join('\n')}`
+      ? `\n\n${this.emojis.html('guide', '📌')} <b>${s.requirementsLabel}:</b>\n${loc.requirements.map((r) => `• ${escapeHtml(r)}`).join('\n')}`
       : '';
     const steps = loc.activationSteps.length
-      ? `\n\n<b>Activation Preview:</b>\n${loc.activationSteps
+      ? `\n\n${this.emojis.html('rocket', '🚀')} <b>${s.guideLabel}:</b>\n${loc.activationSteps
           .slice(0, 5)
           .map((st, idx) => `${idx + 1}. ${escapeHtml(st)}`)
           .join('\n')}`
       : '';
+    const warrantyLine = hasWarranty
+      ? `\n\n${this.emojis.html('shield', '🛡')} <b>${s.warrantyLabel}:</b> ${s.warrantyAvailable}`
+      : '';
 
     const text =
-      `${icon} <b>${escapeHtml(loc.name)} — Details</b>\n\n` +
-      `${escapeHtml(loc.description || loc.shortDesc)}` +
+      `${icon} <b>${escapeHtml(loc.name || product.name)}</b>\n\n` +
+      `${escapeHtml(cleanDesc)}` +
       reqs +
-      steps;
+      steps +
+      warrantyLine;
 
     await this.telegram.sendMessage(chatId, text.slice(0, 4000), {
       inline_keyboard: [
         product.stock > 0
           ? [
               {
-                text: `Buy Now · ${Number(product.price).toLocaleString()} ETB`,
+                text: `${s.buyNow} · ${Number(product.price).toLocaleString()} ETB`,
                 callback_data: `b:${product.id}:1`,
                 style: 'success',
                 ...this.emojis.btnIcon('pay', product.emojiId),
@@ -425,13 +534,13 @@ export class BotMenuService {
             ]
           : [
               {
-                text: 'Notify Me When Back',
+                text: s.notifyMe,
                 callback_data: `al:${product.id}`,
                 style: 'primary',
                 ...this.emojis.btnIcon('bell'),
               },
             ],
-        [{ text: 'Back to Product', callback_data: `p:${product.id}`, ...this.emojis.btnIcon('back') }],
+        [{ text: s.backBtn, callback_data: `p:${product.id}`, style: 'danger', ...this.emojis.btnIcon('back') }],
       ],
     });
   }
@@ -442,18 +551,29 @@ export class BotMenuService {
     productId: string,
     callbackId: string,
     lang: BotLang,
+    messageId?: number,
+    wasPhoto?: boolean,
   ) {
     try {
-      await this.stockAlerts.subscribe({
+      const res = await this.stockAlerts.toggle({
         productId,
         telegramUserId: String(from.id),
         username: from.username,
         firstName: from.first_name,
       });
-      void this.users.trackEvent({ telegramId: String(from.id), eventType: 'STOCK_ALERT', productId });
-      await this.telegram.answerCallbackQuery(callbackId, this.i18n.t(lang).notifyDone, true);
+      if (res.subscribed) {
+        void this.users.trackEvent({ telegramId: String(from.id), eventType: 'STOCK_ALERT', productId });
+      }
+      await this.telegram.answerCallbackQuery(
+        callbackId,
+        res.subscribed ? this.i18n.t(lang).notifyDone : 'Restock alert disabled',
+        false,
+      );
+      if (messageId) {
+        await this.showProduct(chatId, String(from.id), lang, productId, 1, messageId, wasPhoto, false);
+      }
     } catch (err: any) {
-      await this.telegram.answerCallbackQuery(callbackId, err?.message || 'Could not subscribe', true);
+      await this.telegram.answerCallbackQuery(callbackId, err?.message || 'Could not update alert', true);
     }
   }
 
@@ -582,7 +702,7 @@ export class BotMenuService {
           { text: 'Complete Test Payment', callback_data: `pm:${order.id}`, style: 'success', ...this.emojis.btnIcon('pay') },
         ]);
       } else if (order.paymentUrl && /^https?:\/\//i.test(order.paymentUrl)) {
-        keyboard.push([{ text: 'Pay Now (Chapa)', url: order.paymentUrl, style: 'success', ...this.emojis.btnIcon('pay') }]);
+        keyboard.push([{ text: 'Pay Now (Birr)', url: order.paymentUrl, style: 'success', ...this.emojis.btnIcon('pay') }]);
         keyboard.push([
           {
             text: 'Check Payment Status',
@@ -688,7 +808,7 @@ export class BotMenuService {
           await this.showOrderDetail(chatId, res.telegramUserId || '', 'en', res.orderId);
         }
       } else {
-        await this.telegram.answerCallbackQuery(callbackId, '⏳ Payment not confirmed yet. Finish Chapa checkout first.', true);
+        await this.telegram.answerCallbackQuery(callbackId, '⏳ Payment not confirmed yet. Finish payment first.', true);
       }
     } catch (err: any) {
       await this.telegram.answerCallbackQuery(callbackId, err?.message || 'Verification failed', true);
@@ -740,7 +860,7 @@ export class BotMenuService {
             `${emojiId ? tgEmoji(emojiId, '🔑') : this.emojis.html('key', '🔑')} <b>${escapeHtml(p.name)}</b>\n` +
             `${this.emojis.html('money', '💰')} <b>${priceLabel}</b> · ${p.stock > 0 ? '🟢 In Stock' : '🔴 Out of Stock'}\n\n` +
             `${escapeHtml(p.shortDesc || '')}\n\n` +
-            `${this.emojis.html('fire', '⚡')} Pay instantly with Chapa inside Telegram:`,
+            `${this.emojis.html('fire', '⚡')} Pay instant in Birr right inside Telegram:`,
           parse_mode: 'HTML',
         },
         reply_markup: {
