@@ -18,6 +18,7 @@ interface CustomerInput {
   telegramUserId?: string;
   telegramUsername?: string;
   refCode?: string;
+  returnUrl?: string;
 }
 
 interface CartLine {
@@ -182,7 +183,8 @@ export class PaymentsService {
     }
 
     const firstOrder = createdOrders[0];
-    const returnUrl = `${this.frontendUrl()}/order/${firstOrder.id}/activation?tx_ref=${cartRef}`;
+    const returnUrl =
+      data.returnUrl || `${this.frontendUrl()}/order/${firstOrder.id}/activation?tx_ref=${cartRef}`;
     let checkoutUrl = `${this.frontendUrl()}/pay/mock/${firstOrder.id}`;
 
     if (mode === 'live') {
@@ -306,6 +308,20 @@ export class PaymentsService {
         data: { status: 'PAID' },
         include: { product: { include: { activationGuide: true } } },
       });
+      if (order.telegramUserId) {
+        void this.prisma.userEvent
+          .create({
+            data: {
+              telegramId: String(order.telegramUserId),
+              eventType: 'ORDER_PAID',
+              productId: order.productId,
+              productName: order.product?.name || null,
+              orderId: order.id,
+              amount: order.amount,
+            },
+          })
+          .catch(() => undefined);
+      }
     }
 
     // 2. Deliver goods: background queue (Redis) or inline fallback
@@ -374,7 +390,7 @@ export class PaymentsService {
       licenseKey: order.licenseKey,
       telegramUserId: order.telegramUserId,
       id: order.id,
-      product: order.product ? { name: order.product.name } : null,
+      product: order.product ? { name: order.product.name, emojiId: order.product.emojiId } : null,
     });
   }
 

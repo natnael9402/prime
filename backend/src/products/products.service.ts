@@ -19,6 +19,7 @@ export interface CreateProductDto {
   originalPrice?: number;
   currency?: string;
   badge?: string;
+  emojiId?: string | null;
   bannerUrl: string;
   gallery: string[];
   features: string[];
@@ -169,6 +170,7 @@ export class ProductsService {
         originalPrice: dto.originalPrice ? Number(dto.originalPrice) : null,
         currency: dto.currency || 'ETB',
         badge: dto.badge || null,
+        emojiId: dto.emojiId?.trim() || null,
         bannerUrl: dto.bannerUrl,
         gallery: JSON.stringify(dto.gallery || [dto.bannerUrl]),
         features: JSON.stringify(dto.features || []),
@@ -232,6 +234,7 @@ export class ProductsService {
     if (dto.originalPrice !== undefined) updateData.originalPrice = dto.originalPrice ? Number(dto.originalPrice) : null;
     if (dto.currency !== undefined) updateData.currency = dto.currency;
     if (dto.badge !== undefined) updateData.badge = dto.badge;
+    if (dto.emojiId !== undefined) updateData.emojiId = dto.emojiId?.trim() || null;
     if (dto.bannerUrl !== undefined) updateData.bannerUrl = dto.bannerUrl;
     if (dto.gallery !== undefined) updateData.gallery = JSON.stringify(dto.gallery);
     if (dto.features !== undefined) updateData.features = JSON.stringify(dto.features);
@@ -312,11 +315,23 @@ export class ProductsService {
     );
   }
 
-  async createCategory(name: string, icon: string) {
+  async createCategory(name: string, icon: string, emojiId?: string | null) {
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
     const category = await this.prisma.category.create({
-      data: { name, slug, icon },
+      data: { name, slug, icon, emojiId: emojiId?.trim() || null },
     });
+    await this.invalidateCatalog();
+    return category;
+  }
+
+  async updateCategory(id: string, dto: { name?: string; icon?: string; emojiId?: string | null }) {
+    const existing = await this.prisma.category.findUnique({ where: { id } });
+    if (!existing) throw new NotFoundException(`Category ${id} not found`);
+    const data: any = {};
+    if (dto.name !== undefined) data.name = dto.name.trim();
+    if (dto.icon !== undefined) data.icon = dto.icon;
+    if (dto.emojiId !== undefined) data.emojiId = dto.emojiId?.trim() || null;
+    const category = await this.prisma.category.update({ where: { id }, data });
     await this.invalidateCatalog();
     return category;
   }

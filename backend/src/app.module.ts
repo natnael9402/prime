@@ -17,6 +17,10 @@ import { AuthModule } from './auth/auth.module';
 import { HomeCardsModule } from './home-cards/home-cards.module';
 import { R2Module } from './r2/r2.module';
 import { BroadcastModule } from './broadcast/broadcast.module';
+import { RewardsModule } from './rewards/rewards.module';
+import { UsersModule } from './users/users.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { BotModule } from './bot/bot.module';
 
 @Module({
   imports: [
@@ -39,6 +43,10 @@ import { BroadcastModule } from './broadcast/broadcast.module';
     HomeCardsModule,
     R2Module,
     BroadcastModule,
+    RewardsModule,
+    UsersModule,
+    AnalyticsModule,
+    BotModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

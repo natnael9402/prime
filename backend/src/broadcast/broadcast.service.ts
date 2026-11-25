@@ -146,7 +146,7 @@ export class BroadcastService implements OnModuleInit {
 
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
-      select: { id: true, name: true },
+      select: { id: true, name: true, emojiId: true },
     });
     if (!product) throw new NotFoundException('Product not found');
 
@@ -154,7 +154,7 @@ export class BroadcastService implements OnModuleInit {
       data: {
         productId: product.id,
         productName: product.name,
-        productUrl: `${this.storeUrl}/product/${product.id}`,
+        productUrl: `bot://product/${product.id}`,
         imageUrl,
         caption,
         buttonText,
@@ -162,7 +162,7 @@ export class BroadcastService implements OnModuleInit {
     });
 
     // Fire and forget — the admin UI polls GET /broadcasts/admin/:id for progress.
-    void this.runBroadcast(record.id).catch((err) =>
+    void this.runBroadcast(record.id, product.emojiId).catch((err) =>
       this.logger.error(`Broadcast ${record.id} crashed: ${err?.message}`),
     );
 
@@ -170,28 +170,44 @@ export class BroadcastService implements OnModuleInit {
   }
 
   private async getRecipients(): Promise<string[]> {
-    const rows = await this.prisma.$queryRaw<{ telegram_id: string }[]>`
-      SELECT DISTINCT telegram_id
-      FROM (
-        SELECT "telegramId"::text AS telegram_id FROM "TgUser"
-        UNION
-        SELECT "telegramUserId"::text AS telegram_id FROM "Order"
-        WHERE "telegramUserId" IS NOT NULL
-        UNION
-        SELECT "telegramUserId"::text AS telegram_id FROM "StockAlert"
-        UNION
-        SELECT "telegramUserId"::text AS telegram_id FROM "Affiliate"
-        WHERE "telegramUserId" IS NOT NULL
-      ) users
-      WHERE telegram_id ~ '^-?[0-9]+$'
-      ORDER BY telegram_id
-    `;
-    return rows.map((r) => r.telegram_id);
+    const [tgUsers, orders, alerts, affiliates] = await Promise.all([
+      this.prisma.tgUser.findMany({ select: { telegramId: true } }),
+      this.prisma.order.findMany({
+        where: { telegramUserId: { not: null } },
+        select: { telegramUserId: true },
+        distinct: ['telegramUserId'],
+      }),
+      this.prisma.stockAlert.findMany({ select: { telegramUserId: true }, distinct: ['telegramUserId'] }),
+      this.prisma.affiliate.findMany({
+        where: { telegramUserId: { not: null } },
+        select: { telegramUserId: true },
+      }),
+    ]);
+
+    const ids = new Set<string>();
+    const add = (v?: string | null) => {
+      const s = String(v || '').trim();
+      if (/^-?\d+$/.test(s)) ids.add(s);
+    };
+    tgUsers.forEach((u) => add(u.telegramId));
+    orders.forEach((o) => add(o.telegramUserId));
+    alerts.forEach((a) => add(a.telegramUserId));
+    affiliates.forEach((a) => add(a.telegramUserId));
+    return [...ids].sort();
   }
 
-  private async runBroadcast(id: string) {
+  private async runBroadcast(id: string, emojiId?: string | null) {
     const record = await this.prisma.broadcast.findUnique({ where: { id } });
     if (!record || record.status !== 'RUNNING') return;
+
+    let resolvedEmojiId = emojiId;
+    if (resolvedEmojiId === undefined && record.productId) {
+      const p = await this.prisma.product.findUnique({
+        where: { id: record.productId },
+        select: { emojiId: true },
+      });
+      resolvedEmojiId = p?.emojiId || null;
+    }
 
     let sent = 0;
     let failed = 0;
@@ -217,7 +233,14 @@ export class BroadcastService implements OnModuleInit {
               disable_web_page_preview: true,
               reply_markup: {
                 inline_keyboard: [
-                  [{ text: record.buttonText, web_app: { url: record.productUrl } }],
+                  [
+                    {
+                      text: record.buttonText,
+                      callback_data: record.productId ? `p:${record.productId}` : 'h:0',
+                      style: 'success',
+                      ...(resolvedEmojiId ? { icon_custom_emoji_id: resolvedEmojiId } : {}),
+                    },
+                  ],
                 ],
               },
             };

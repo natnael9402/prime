@@ -12,6 +12,7 @@ model Category {
   name      String
   slug      String    @unique
   icon      String
+  emojiId   String?
   products  Product[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -45,15 +46,25 @@ model HomeCard {
 }
 
 model TgUser {
-  id           String   @id @default(uuid())
-  telegramId   String   @unique
-  firstName    String?
-  lastName     String?
-  username     String?
-  photoUrl     String?
-  languageCode String?
-  createdAt    DateTime @default(now())
-  lastSeenAt   DateTime @updatedAt
+  id                  String   @id @default(uuid())
+  telegramId          String   @unique
+  firstName           String?
+  lastName            String?
+  username            String?
+  photoUrl            String?
+  languageCode        String?
+  referralCode        String?  @unique
+  invitedById         String?
+  inviteVerified      Boolean  @default(false)
+  storeCredit         Float    @default(0)
+  customDiscountPct   Float    @default(0)
+  isBanned            Boolean  @default(false)
+  banReason           String?
+  adminNote           String?
+  productsViewedCount Int      @default(0)
+  lastActiveAt        DateTime @default(now())
+  createdAt           DateTime @default(now())
+  lastSeenAt          DateTime @updatedAt
 }
 
 model Product {
@@ -66,6 +77,7 @@ model Product {
   originalPrice    Float?
   currency         String            @default("ETB")
   badge            String?
+  emojiId          String?
   bannerUrl        String
   gallery          String
   features         String
@@ -86,6 +98,7 @@ model Product {
   stockAlerts      StockAlert[]
   activationGuide  ActivationGuide?
   orders           Order[]
+  rewardTiers      RewardTier[]
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 }
@@ -171,6 +184,7 @@ model Order {
   affiliateId       String?
   affiliate         Affiliate? @relation(fields: [affiliateId], references: [id])
   commissionAmount  Float?
+  creditUsed        Float?
   createdAt         DateTime   @default(now())
   updatedAt         DateTime   @updatedAt
 }
@@ -207,4 +221,72 @@ model StockAlert {
   createdAt      DateTime @default(now())
 
   @@unique([productId, telegramUserId])
+}
+
+model Broadcast {
+  id             String    @id @default(uuid())
+  productId      String?
+  productName    String
+  productUrl     String
+  imageUrl       String
+  caption        String
+  buttonText     String
+  status         String    @default("RUNNING") // RUNNING | COMPLETED | FAILED
+  total          Int       @default(0)
+  sent           Int       @default(0)
+  failed         Int       @default(0)
+  failureSummary String    @default("{}")
+  error          String?
+  createdAt      DateTime  @default(now())
+  completedAt    DateTime?
+}
+
+model RewardTier {
+  id              String        @id @default(uuid())
+  title           String
+  description     String?
+  requiredInvites Int
+  rewardType      String        @default("PRODUCT") // PRODUCT | STORE_CREDIT
+  productId       String?
+  product         Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  creditAmount    Float?
+  autoDeliver     Boolean       @default(true)
+  enabled         Boolean       @default(true)
+  order           Int           @default(0)
+  claims          RewardClaim[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model RewardClaim {
+  id             String     @id @default(uuid())
+  telegramUserId String
+  tierId         String
+  tier           RewardTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
+  status         String     @default("DELIVERED") // PENDING | DELIVERED | REJECTED
+  orderId        String?
+  licenseKey     String?
+  note           String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@unique([telegramUserId, tierId])
+}
+
+model UserEvent {
+  id           String   @id @default(uuid())
+  telegramId   String
+  eventType    String   // BOT_START | CATEGORY_VIEW | PRODUCT_VIEW | SEARCH | BUY_CLICK | ORDER_PAID | REWARD_CLAIM | STOCK_ALERT
+  productId    String?
+  productName  String?
+  categorySlug String?
+  query        String?
+  orderId      String?
+  amount       Float?
+  meta         String?
+  createdAt    DateTime @default(now())
+
+  @@index([telegramId, createdAt])
+  @@index([eventType, createdAt])
+  @@index([productId, eventType])
 }

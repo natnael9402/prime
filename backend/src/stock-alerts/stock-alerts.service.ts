@@ -87,23 +87,23 @@ export class StockAlertsService {
   async notifyRestock(productId: string) {
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
-      select: { id: true, slug: true, name: true, price: true, currency: true, stock: true },
+      select: { id: true, slug: true, name: true, emojiId: true, price: true, currency: true, stock: true },
     });
     if (!product || product.stock <= 0) return { notified: 0 };
 
     const alerts = await this.prisma.stockAlert.findMany({ where: { productId: product.id } });
     if (alerts.length === 0) return { notified: 0 };
 
-    const productPath = `/product/${product.slug || product.id}`;
     let notified = 0;
     for (const a of alerts) {
       try {
         const res = await this.telegram.notifyBackInStock({
           telegramUserId: a.telegramUserId,
+          productId: product.id,
           productName: product.name,
+          emojiId: product.emojiId,
           price: product.price,
           currency: product.currency,
-          productPath,
         });
         if (res !== null) notified++;
       } catch (err: any) {

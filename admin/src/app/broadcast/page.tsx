@@ -425,7 +425,9 @@ export default function BroadcastPage() {
                       className="input-dark w-full rounded-2xl px-3 py-2.5 text-[12px]"
                       placeholder="🛒 Buy now"
                     />
-                    <p className="text-[9px] text-slate-600 mt-1.5">Opens: {selected.productUrl}</p>
+                    <p className="text-[9px] text-emerald-400/80 mt-1.5">
+                      Opens product card &amp; native Chapa checkout directly inside the Telegram bot.
+                    </p>
                   </div>
 
                   <button

@@ -91,8 +91,12 @@ export const api = {
     const res = await client.post('/products/translate', dto);
     return res.data;
   },
-  createCategory: async (name: string, icon: string) => {
-    const res = await client.post('/products/categories', { name, icon });
+  createCategory: async (name: string, icon: string, emojiId?: string | null) => {
+    const res = await client.post('/products/categories', { name, icon, emojiId });
+    return res.data;
+  },
+  updateCategory: async (id: string, dto: { name?: string; icon?: string; emojiId?: string | null }) => {
+    const res = await client.put(`/products/categories/${id}`, dto);
     return res.data;
   },
   createProduct: async (dto: any) => {
@@ -283,6 +287,98 @@ export const api = {
     buttonText: string;
   }) => {
     const res = await client.post('/broadcasts/admin/send', dto);
+    return res.data;
+  },
+
+  // Bot Emoji Pack (HubX Emojis)
+  getBotEmojiPack: async (name?: string) => {
+    const res = await client.get('/bot/admin/emoji-pack', { params: name ? { name } : {} });
+    return res.data as {
+      name: string;
+      title: string;
+      stickerType: string;
+      configured: boolean;
+      stickers: {
+        customEmojiId: string;
+        emoji: string;
+        fileId: string;
+        thumbFileId: string | null;
+        isAnimated: boolean;
+        isVideo: boolean;
+      }[];
+    };
+  },
+  getEmojiFileUrl: (fileId: string) => `${API_BASE}/bot/emoji-file/${encodeURIComponent(fileId)}`,
+
+  // Invite & Unlock Rewards
+  getRewardStats: async () => {
+    const res = await client.get('/rewards/admin/stats');
+    return res.data;
+  },
+  getRewardTiers: async () => {
+    const res = await client.get('/rewards/admin/tiers');
+    return res.data;
+  },
+  createRewardTier: async (dto: any) => {
+    const res = await client.post('/rewards/admin/tiers', dto);
+    return res.data;
+  },
+  updateRewardTier: async (id: string, dto: any) => {
+    const res = await client.put(`/rewards/admin/tiers/${id}`, dto);
+    return res.data;
+  },
+  deleteRewardTier: async (id: string) => {
+    const res = await client.delete(`/rewards/admin/tiers/${id}`);
+    return res.data;
+  },
+  getRewardClaims: async (status?: string) => {
+    const res = await client.get('/rewards/admin/claims', { params: status ? { status } : {} });
+    return res.data;
+  },
+  approveRewardClaim: async (id: string) => {
+    const res = await client.post(`/rewards/admin/claims/${id}/approve`);
+    return res.data;
+  },
+  rejectRewardClaim: async (id: string) => {
+    const res = await client.post(`/rewards/admin/claims/${id}/reject`);
+    return res.data;
+  },
+
+  // Users & 360 Control
+  getUsers: async (params?: { search?: string; filter?: string; page?: number; limit?: number; sort?: string }) => {
+    const res = await client.get('/users/admin/list', { params });
+    return res.data;
+  },
+  getUserDetail: async (telegramId: string) => {
+    const res = await client.get(`/users/admin/${encodeURIComponent(telegramId)}`);
+    return res.data;
+  },
+  updateUser: async (
+    telegramId: string,
+    dto: {
+      isBanned?: boolean;
+      banReason?: string | null;
+      adminNote?: string | null;
+      customDiscountPct?: number;
+      storeCredit?: number;
+      languageCode?: string;
+    },
+  ) => {
+    const res = await client.put(`/users/admin/${encodeURIComponent(telegramId)}`, dto);
+    return res.data;
+  },
+  adjustUserCredit: async (telegramId: string, dto: { delta: number; reason?: string; notify?: boolean }) => {
+    const res = await client.post(`/users/admin/${encodeURIComponent(telegramId)}/credit`, dto);
+    return res.data;
+  },
+  sendUserMessage: async (telegramId: string, text: string) => {
+    const res = await client.post(`/users/admin/${encodeURIComponent(telegramId)}/message`, { text });
+    return res.data as { sent: boolean };
+  },
+
+  // Analytics
+  getAnalyticsDashboard: async (range: '7d' | '30d' | '90d' | 'all' = '30d') => {
+    const res = await client.get('/analytics/admin/dashboard', { params: { range } });
     return res.data;
   },
 };

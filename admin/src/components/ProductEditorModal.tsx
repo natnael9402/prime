@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import R2ImagePicker from './R2ImagePicker';
+import BotEmojiPicker from './BotEmojiPicker';
 
 type LangCode = 'en' | 'am';
 type EditorTab = 'details' | 'media' | 'pricing' | 'languages' | 'keys';
@@ -85,6 +86,7 @@ const initialForm = {
   originalPrice: '',
   currency: 'ETB',
   badge: 'NEW',
+  emojiId: '',
   bannerUrl: '',
   categoryId: '',
   featuresStr: 'Original digital product\nInstant delivery',
@@ -148,6 +150,7 @@ export default function ProductEditorModal({
       originalPrice: product.originalPrice ? String(product.originalPrice) : '',
       currency: product.currency || 'ETB',
       badge: product.badge || '',
+      emojiId: product.emojiId || '',
       bannerUrl: product.bannerUrl || '',
       categoryId: product.categoryId || product.category?.id || categories[0]?.id || '',
       featuresStr: joinLines(product.features),
@@ -273,6 +276,7 @@ export default function ProductEditorModal({
       originalPrice: original,
       currency: form.currency,
       badge: form.badge.trim() || null,
+      emojiId: form.emojiId.trim() || null,
       bannerUrl: form.bannerUrl.trim(),
       gallery,
       categoryId: form.categoryId,
@@ -512,6 +516,13 @@ export default function ProductEditorModal({
                     />
                   </Field>
                 </div>
+
+                <Field label="Telegram Bot Custom Emoji (HubX Emojis)">
+                  <BotEmojiPicker
+                    value={form.emojiId}
+                    onChange={(val) => updateForm('emojiId', val)}
+                  />
+                </Field>
 
                 <Field label="Activation steps — one per line">
                   <textarea

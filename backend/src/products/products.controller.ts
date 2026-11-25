@@ -49,8 +49,17 @@ export class ProductsController {
 
   @UseGuards(AdminGuard)
   @Post('categories')
-  async createCategory(@Body() body: { name: string; icon: string }) {
-    return this.productsService.createCategory(body.name, body.icon);
+  async createCategory(@Body() body: { name: string; icon: string; emojiId?: string | null }) {
+    return this.productsService.createCategory(body.name, body.icon, body.emojiId);
+  }
+
+  @UseGuards(AdminGuard)
+  @Put('categories/:id')
+  async updateCategory(
+    @Param('id') id: string,
+    @Body() body: { name?: string; icon?: string; emojiId?: string | null },
+  ) {
+    return this.productsService.updateCategory(id, body);
   }
 
   @Get(':idOrSlug')
