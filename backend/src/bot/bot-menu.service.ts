@@ -14,6 +14,7 @@ import {
 } from '../telegram/telegram.service';
 import { BotI18nService, BotLang } from './bot-i18n.service';
 import { BotStateService } from './bot-state.service';
+import { BotEmojiService } from './bot-emoji.service';
 import { formatDeliveryForTelegram } from './bot-delivery.formatter';
 
 const PAGE_SIZE = 6;
@@ -31,6 +32,7 @@ export class BotMenuService {
     private readonly telegram: TelegramService,
     private readonly i18n: BotI18nService,
     private readonly state: BotStateService,
+    private readonly emojis: BotEmojiService,
   ) {}
 
   private async showOrEditText(
@@ -52,18 +54,21 @@ export class BotMenuService {
 
   async sendWelcomeDock(chatId: string | number, lang: BotLang, firstName?: string) {
     const s = this.i18n.t(lang);
+    const wave = this.emojis.html('fire', '👋');
+    const keyIcon = this.emojis.html('store', '🔑');
     const greet =
       lang === 'am'
-        ? `👋 ሰላም <b>${escapeHtml(firstName || 'ወዳጅ')}</b>!`
-        : `👋 Welcome, <b>${escapeHtml(firstName || 'Friend')}</b>!`;
+        ? `${wave} ሰላም <b>${escapeHtml(firstName || 'ወዳጅ')}</b>!`
+        : `${wave} Welcome, <b>${escapeHtml(firstName || 'Friend')}</b>!`;
     await this.telegram.sendMessage(
       chatId,
-      `${greet}\n🔑 <b>${s.welcomeTitle}</b>`,
+      `${greet}\n${keyIcon} <b>${s.welcomeTitle}</b>`,
       this.i18n.mainReplyKeyboard(lang),
     );
   }
 
   async showHome(chatId: string | number, telegramId: string, lang: BotLang, messageId?: number, wasPhoto?: boolean) {
+    await this.emojis.warmUiPacks();
     const s = this.i18n.t(lang);
     const [categories, cards, tgUser] = await Promise.all([
       this.products.getCategories(),
@@ -74,30 +79,44 @@ export class BotMenuService {
     const heroCard = cards.find((c: any) => c.kind === 'hero') || cards[0];
     const promoLines = cards
       .slice(0, 2)
-      .map((c: any) => `✨ <b>${escapeHtml(c.title)}</b>${c.subtitle ? `\n<i>${escapeHtml(c.subtitle)}</i>` : ''}`)
+      .map(
+        (c: any) =>
+          `${this.emojis.html('fire', '✨')} <b>${escapeHtml(c.title)}</b>${
+            c.subtitle ? `\n<i>${escapeHtml(c.subtitle)}</i>` : ''
+          }`,
+      )
       .join('\n\n');
 
     const vipBadge =
       tgUser?.customDiscountPct && tgUser.customDiscountPct > 0
-        ? `🌟 VIP Discount: <b>${tgUser.customDiscountPct}% OFF</b> on every product!\n`
+        ? `${this.emojis.html('featured', '🌟')} VIP Discount: <b>${tgUser.customDiscountPct}% OFF</b>\n`
         : '';
     const creditBadge =
       tgUser?.storeCredit && tgUser.storeCredit > 0
-        ? `💰 Store Credit: <b>${tgUser.storeCredit.toLocaleString()} ETB</b>\n`
+        ? `${this.emojis.html('money', '💰')} Store Credit: <b>${tgUser.storeCredit.toLocaleString()} ETB</b>\n`
         : '';
 
     const text =
-      `🔑 <b>${s.welcomeTitle}</b>\n` +
+      `${this.emojis.html('store', '💎')} <b>${s.welcomeTitle}</b>\n` +
       `<i>${s.welcomeSub}</i>\n\n` +
       (promoLines ? `${promoLines}\n\n` : '') +
       vipBadge +
       creditBadge +
-      `<b>${s.pickCategory}</b>`;
+      `${this.emojis.html('shop', '👇')} <b>${s.pickCategory}</b>`;
 
     const keyboard: InlineButton[][] = [
       [
-        { text: s.allProducts, callback_data: 'c:all:0', style: 'primary' },
-        { text: `⭐ ${s.featured}`, callback_data: 'c:featured:0' },
+        {
+          text: s.allProducts,
+          callback_data: 'c:all:0',
+          style: 'primary',
+          ...this.emojis.btnIcon('shop'),
+        },
+        {
+          text: s.featured,
+          callback_data: 'c:featured:0',
+          ...this.emojis.btnIcon('featured'),
+        },
       ],
     ];
 
@@ -106,7 +125,7 @@ export class BotMenuService {
       .map((cat) => ({
         text: cat.name,
         callback_data: `c:${cat.slug}:0`,
-        ...(cat.emojiId ? { icon_custom_emoji_id: cat.emojiId } : {}),
+        ...this.emojis.btnIcon('product', cat.emojiId),
       }));
 
     for (let i = 0; i < catButtons.length; i += 2) {
@@ -119,18 +138,29 @@ export class BotMenuService {
           text: `${heroCard.title}`.slice(0, 48),
           callback_data: `p:${heroCard.productId}`,
           style: 'success',
+          ...this.emojis.btnIcon('fire'),
         },
       ]);
     }
 
     keyboard.push([
-      { text: '🎁 Invite & Unlock', callback_data: 'rew:home', style: 'success' },
-      { text: `📦 ${lang === 'am' ? 'ትዕዛዞቼ' : 'Orders'}`, callback_data: 'ord:0' },
+      {
+        text: 'Invite & Unlock',
+        callback_data: 'rew:home',
+        style: 'success',
+        ...this.emojis.btnIcon('reward'),
+      },
+      {
+        text: lang === 'am' ? 'ትዕዛዞቼ' : 'Orders',
+        callback_data: 'ord:0',
+        ...this.emojis.btnIcon('orders'),
+      },
     ]);
 
     await this.showOrEditText(chatId, text, { inline_keyboard: keyboard }, messageId, wasPhoto);
   }
 
+  /** Buttons-only catalog: crisp header in text, all products cleanly inside colored icon buttons. */
   async showCatalog(
     chatId: string | number,
     telegramId: string,
@@ -140,6 +170,7 @@ export class BotMenuService {
     messageId?: number,
     wasPhoto?: boolean,
   ) {
+    await this.emojis.warmUiPacks();
     const s = this.i18n.t(lang);
     const [all, tgUser] = await Promise.all([
       this.products.findAll(categorySlug === 'featured' || categorySlug === 'all' ? undefined : categorySlug),
@@ -159,42 +190,43 @@ export class BotMenuService {
     if (slice.length === 0) {
       await this.showOrEditText(
         chatId,
-        `📭 ${s.allProducts}: <i>No products in this category yet.</i>`,
-        { inline_keyboard: [[{ text: '⬅️ Back to Store', callback_data: 'h:0', style: 'primary' }]] },
+        `${this.emojis.html('orders', '📭')} <b>${s.allProducts}</b>\n<i>No products in this category yet.</i>`,
+        {
+          inline_keyboard: [
+            [{ text: 'Back to Store', callback_data: 'h:0', style: 'primary', ...this.emojis.btnIcon('back') }],
+          ],
+        },
         messageId,
         wasPhoto,
       );
       return;
     }
 
-    const lines = slice.map((p: any) => {
-      const loc = this.i18n.localizeProduct(p, lang);
-      const icon = tgEmoji(p.emojiId, '·');
-      const finalPrice = vipPct > 0 ? Math.max(1, Math.round(p.price * (1 - vipPct / 100))) : p.price;
-      const price = `${Number(finalPrice).toLocaleString()} ${p.currency || 'ETB'}`;
-      const stockDot = p.stock > 0 ? '🟢' : '🔴';
-      return `${icon} <b>${escapeHtml(loc.name)}</b> — <b>${price}</b> ${stockDot}`;
-    });
-
     const title =
       categorySlug === 'all'
-        ? `🛍 <b>${s.allProducts}</b>`
+        ? `${this.emojis.html('shop', '🛍')} <b>${s.allProducts}</b>`
         : categorySlug === 'featured'
-          ? `⭐ <b>${s.featured}</b>`
-          : `📂 <b>${escapeHtml(categorySlug.toUpperCase())}</b>`;
+          ? `${this.emojis.html('featured', '⭐')} <b>${s.featured}</b>`
+          : `${this.emojis.html('product', '📂')} <b>${escapeHtml(categorySlug.toUpperCase())}</b>`;
 
-    const text = `${title} · ${filtered.length}\n\n${lines.join('\n')}`;
+    const subtitle =
+      lang === 'am'
+        ? 'ዝርዝሩን ለማየት እና ለመግዛት ከታች አንዱን ይጫኑ 👇'
+        : 'Select a product below to view &amp; buy 👇';
+
+    const text = `${title} · <b>${filtered.length}</b>\n<i>${subtitle}</i>`;
 
     const keyboard: InlineButton[][] = slice.map((p: any) => {
       const loc = this.i18n.localizeProduct(p, lang);
       const finalPrice = vipPct > 0 ? Math.max(1, Math.round(p.price * (1 - vipPct / 100))) : p.price;
+      const emojiId = this.emojis.productEmojiId(p);
       const label = `${loc.name} · ${Number(finalPrice).toLocaleString()} ${p.currency || 'ETB'}`.slice(0, 56);
       return [
         {
           text: label,
           callback_data: `p:${p.id}`,
           style: p.stock > 0 ? 'primary' : 'danger',
-          ...(p.emojiId ? { icon_custom_emoji_id: p.emojiId } : {}),
+          ...(emojiId ? { icon_custom_emoji_id: emojiId } : {}),
         },
       ];
     });
@@ -210,8 +242,8 @@ export class BotMenuService {
     }
 
     keyboard.push([
-      { text: '← Home', callback_data: 'h:0' },
-      { text: '🔍 Search', callback_data: 'srch:go' },
+      { text: 'Home', callback_data: 'h:0', ...this.emojis.btnIcon('back') },
+      { text: 'Search', callback_data: 'srch:go', ...this.emojis.btnIcon('search') },
     ]);
 
     await this.showOrEditText(chatId, text, { inline_keyboard: keyboard }, messageId, wasPhoto);
@@ -227,6 +259,7 @@ export class BotMenuService {
     wasPhoto?: boolean,
     trackView = true,
   ) {
+    await this.emojis.warmUiPacks();
     let product: any;
     try {
       product = await this.products.findOne(productId);
@@ -258,7 +291,12 @@ export class BotMenuService {
       vipPct > 0 ? Math.max(1, Math.round(Number(product.price) * (1 - vipPct / 100))) : Number(product.price || 0);
     const total = unitPrice * safeQty;
 
-    const icon = tgEmoji(product.emojiId, '🔑');
+    const prodEmojiId = this.emojis.productEmojiId(product);
+    const icon = prodEmojiId ? tgEmoji(prodEmojiId, '🔑') : this.emojis.html('key', '🔑');
+    const priceIcon = this.emojis.html('money', '💰');
+    const zapIcon = this.emojis.html('fire', '⚡');
+    const checkIcon = this.emojis.html('success', '✓');
+
     const compareBase = vipPct > 0 ? product.price : product.originalPrice;
     const orig =
       compareBase && compareBase > unitPrice
@@ -267,19 +305,19 @@ export class BotMenuService {
     const discountPct =
       compareBase && compareBase > unitPrice ? Math.round((1 - unitPrice / compareBase) * 100) : 0;
 
-    const featuresText = loc.features.slice(0, 3).map((f) => `· ${escapeHtml(f)}`).join('\n');
+    const featuresText = loc.features.slice(0, 3).map((f) => `${checkIcon} ${escapeHtml(f)}`).join('\n');
     const stockLine =
       product.stock > 0
-        ? `🟢 <b>${s.instantDelivery}</b> · ${product.stock} left`
+        ? `${zapIcon} <b>${s.instantDelivery}</b> · ${product.stock} left`
         : `🔴 <b>${s.outOfStock}</b>`;
 
     const caption =
       `${icon} <b>${escapeHtml(loc.name)}</b>` +
       (product.badge ? ` · <code>${escapeHtml(product.badge)}</code>` : '') +
-      `\n` +
-      `<b>${unitPrice.toLocaleString()} ${product.currency}</b>${orig}` +
+      `\n\n` +
+      `${priceIcon} <b>${unitPrice.toLocaleString()} ${product.currency}</b>${orig}` +
       (discountPct > 0 ? ` <b>(-${discountPct}%)</b>` : '') +
-      (vipPct > 0 ? ` · 🌟 <i>VIP</i>` : '') +
+      (vipPct > 0 ? ` · ${this.emojis.html('featured', '🌟')} <i>VIP</i>` : '') +
       `\n${stockLine}` +
       (loc.shortDesc ? `\n\n${escapeHtml(loc.shortDesc)}` : '') +
       (featuresText ? `\n\n${featuresText}` : '');
@@ -297,34 +335,36 @@ export class BotMenuService {
           text: `${s.buyNow} · ${total.toLocaleString()} ${product.currency}`,
           callback_data: `b:${product.id}:${safeQty}`,
           style: 'success',
-          ...(product.emojiId ? { icon_custom_emoji_id: product.emojiId } : {}),
+          ...this.emojis.btnIcon('pay', product.emojiId),
         },
       ]);
       if ((tgUser?.storeCredit || 0) > 0 && total > 10) {
         const creditApply = Math.min(tgUser!.storeCredit, total - 1);
         keyboard.push([
           {
-            text: `🎟 Use ${creditApply.toLocaleString()} ETB Credit`,
+            text: `Use ${creditApply.toLocaleString()} ETB Credit`,
             callback_data: `bc:${product.id}:${safeQty}`,
             style: 'primary',
+            ...this.emojis.btnIcon('credit'),
           },
         ]);
       }
     } else {
       keyboard.push([
         {
-          text: `🔔 ${s.notifyMe}`,
+          text: s.notifyMe,
           callback_data: `al:${product.id}`,
           style: 'primary',
+          ...this.emojis.btnIcon('bell'),
         },
       ]);
     }
 
     const backCat = userState.lastCategorySlug || 'all';
     keyboard.push([
-      { text: 'Details', callback_data: `pd:${product.id}` },
-      { text: 'Share', switch_inline_query: loc.name.slice(0, 32) },
-      { text: '← Back', callback_data: `c:${backCat}:0` },
+      { text: 'Details', callback_data: `pd:${product.id}`, ...this.emojis.btnIcon('details') },
+      { text: 'Share', switch_inline_query: loc.name.slice(0, 32), ...this.emojis.btnIcon('share') },
+      { text: 'Back', callback_data: `c:${backCat}:0`, ...this.emojis.btnIcon('back') },
     ]);
 
     const markup = { inline_keyboard: keyboard };
@@ -353,7 +393,8 @@ export class BotMenuService {
       return;
     }
     const loc = this.i18n.localizeProduct(product, lang);
-    const icon = tgEmoji(product.emojiId, '📋');
+    const prodEmojiId = this.emojis.productEmojiId(product);
+    const icon = prodEmojiId ? tgEmoji(prodEmojiId, '📋') : this.emojis.html('details', '📋');
 
     const reqs = loc.requirements.length
       ? `\n\n<b>Requirements:</b>\n${loc.requirements.map((r) => `• ${escapeHtml(r)}`).join('\n')}`
@@ -374,9 +415,23 @@ export class BotMenuService {
     await this.telegram.sendMessage(chatId, text.slice(0, 4000), {
       inline_keyboard: [
         product.stock > 0
-          ? [{ text: `⚡ Buy Now — ${Number(product.price).toLocaleString()} ETB`, callback_data: `b:${product.id}:1`, style: 'success' }]
-          : [{ text: '🔔 Notify Me When Back', callback_data: `al:${product.id}`, style: 'primary' }],
-        [{ text: '⬅️ Back to Product', callback_data: `p:${product.id}` }],
+          ? [
+              {
+                text: `Buy Now · ${Number(product.price).toLocaleString()} ETB`,
+                callback_data: `b:${product.id}:1`,
+                style: 'success',
+                ...this.emojis.btnIcon('pay', product.emojiId),
+              },
+            ]
+          : [
+              {
+                text: 'Notify Me When Back',
+                callback_data: `al:${product.id}`,
+                style: 'primary',
+                ...this.emojis.btnIcon('bell'),
+              },
+            ],
+        [{ text: 'Back to Product', callback_data: `p:${product.id}`, ...this.emojis.btnIcon('back') }],
       ],
     });
   }
@@ -402,7 +457,9 @@ export class BotMenuService {
     }
   }
 
+  /** Buttons-only search results. */
   async runSearch(chatId: string | number, telegramId: string, lang: BotLang, query: string) {
+    await this.emojis.warmUiPacks();
     await this.state.setState(telegramId, { inputStep: null });
     const q = query.trim();
     if (!q) return;
@@ -411,50 +468,57 @@ export class BotMenuService {
 
     const results = await this.products.findAll(undefined, q);
     if (!results.length) {
-      await this.telegram.sendMessage(chatId, this.i18n.t(lang).searchEmpty, {
-        inline_keyboard: [
-          [{ text: '🔍 Try Another Search', callback_data: 'srch:go', style: 'primary' }],
-          [{ text: '🛍 Browse All Products', callback_data: 'c:all:0' }],
-        ],
-      });
+      await this.telegram.sendMessage(
+        chatId,
+        `${this.emojis.html('search', '🔍')} ${this.i18n.t(lang).searchEmpty}`,
+        {
+          inline_keyboard: [
+            [{ text: 'Try Another Search', callback_data: 'srch:go', style: 'primary', ...this.emojis.btnIcon('search') }],
+            [{ text: 'Browse All Products', callback_data: 'c:all:0', ...this.emojis.btnIcon('shop') }],
+          ],
+        },
+      );
       return;
     }
 
     const top = results.slice(0, 8);
-    const lines = top.map((p: any) => {
-      const loc = this.i18n.localizeProduct(p, lang);
-      return `${tgEmoji(p.emojiId, '📦')} <b>${escapeHtml(loc.name)}</b> — <b>${Number(p.price).toLocaleString()} ${p.currency}</b>`;
-    });
 
     await this.telegram.sendMessage(
       chatId,
-      `🔍 <b>Search results for "${escapeHtml(q)}"</b> (${results.length}):\n\n${lines.join('\n')}`,
+      `${this.emojis.html('search', '🔍')} <b>"${escapeHtml(q)}"</b> · ${results.length} found\n<i>Tap a product below 👇</i>`,
       {
         inline_keyboard: [
-          ...top.map((p: any) => [
-            {
-              text: `${this.i18n.localizeProduct(p, lang).name} — ${Number(p.price).toLocaleString()} ETB`.slice(0, 56),
-              callback_data: `p:${p.id}`,
-              style: (p.stock > 0 ? 'primary' : 'danger') as 'primary' | 'danger',
-              ...(p.emojiId ? { icon_custom_emoji_id: p.emojiId } : {}),
-            },
-          ]),
-          [{ text: '🏠 Home', callback_data: 'h:0' }],
+          ...top.map((p: any) => {
+            const emojiId = this.emojis.productEmojiId(p);
+            return [
+              {
+                text: `${this.i18n.localizeProduct(p, lang).name} · ${Number(p.price).toLocaleString()} ETB`.slice(0, 56),
+                callback_data: `p:${p.id}`,
+                style: (p.stock > 0 ? 'primary' : 'danger') as 'primary' | 'danger',
+                ...(emojiId ? { icon_custom_emoji_id: emojiId } : {}),
+              },
+            ];
+          }),
+          [{ text: 'Home', callback_data: 'h:0', ...this.emojis.btnIcon('back') }],
         ],
       },
     );
   }
 
+  /** Buttons-only My Orders list. */
   async showOrders(chatId: string | number, telegramId: string, lang: BotLang, page = 0, messageId?: number, wasPhoto?: boolean) {
+    await this.emojis.warmUiPacks();
     const s = this.i18n.t(lang);
     const res = await this.orders.findMine({ telegramUserId: telegramId, page: page + 1, limit: 6 });
 
     if (!res.orders.length) {
       await this.showOrEditText(
         chatId,
-        `📦 <b>${s.ordersTitle}</b>\n\n${s.noOrders}`,
+        `${this.emojis.html('orders', '📦')} <b>${s.ordersTitle}</b>\n\n${s.noOrders}`,
         {
-          inline_keyboard: [[{ text: '🛍 Open Store', callback_data: 'c:all:0', style: 'primary' }]],
+          inline_keyboard: [
+            [{ text: 'Open Store', callback_data: 'c:all:0', style: 'primary', ...this.emojis.btnIcon('shop') }],
+          ],
         },
         messageId,
         wasPhoto,
@@ -462,32 +526,27 @@ export class BotMenuService {
       return;
     }
 
-    const lines = res.orders.map((o: any) => {
-      const badge = o.status === 'PAID' ? '✅' : '⏳';
-      const amt = o.amount === 0 ? 'FREE REWARD' : `${Number(o.amount).toLocaleString()} ${o.currency}`;
-      return `${badge} <b>${escapeHtml(o.product?.name || 'Product')}</b> — <b>${amt}</b>\n   <code>${escapeHtml(o.txRef)}</code>`;
-    });
-
     const keyboard: InlineButton[][] = res.orders.map((o: any) => [
       {
-        text: `${o.status === 'PAID' ? '🔑' : '⏳'} ${o.product?.name || 'Order'} (${o.txRef.slice(-8)})`.slice(0, 56),
+        text: `${o.product?.name || 'Order'} · ${o.amount === 0 ? 'FREE' : `${Number(o.amount).toLocaleString()} ${o.currency}`}`.slice(0, 56),
         callback_data: `o:${o.id}`,
         style: o.status === 'PAID' ? 'success' : 'primary',
+        ...this.emojis.btnIcon(o.status === 'PAID' ? 'key' : 'pending'),
       },
     ]);
 
     if (res.totalPages > 1) {
       const nav: InlineButton[] = [];
-      if (page > 0) nav.push({ text: '◀️ Prev', callback_data: `ord:${page - 1}` });
-      nav.push({ text: `${page + 1} / ${res.totalPages}`, callback_data: 'noop' });
-      if (page + 1 < res.totalPages) nav.push({ text: 'Next ▶️', callback_data: `ord:${page + 1}` });
+      if (page > 0) nav.push({ text: '‹', callback_data: `ord:${page - 1}` });
+      nav.push({ text: `${page + 1}/${res.totalPages}`, callback_data: 'noop' });
+      if (page + 1 < res.totalPages) nav.push({ text: '›', callback_data: `ord:${page + 1}` });
       keyboard.push(nav);
     }
 
-    keyboard.push([{ text: '🏠 Home', callback_data: 'h:0' }]);
+    keyboard.push([{ text: 'Home', callback_data: 'h:0', ...this.emojis.btnIcon('back') }]);
     await this.showOrEditText(
       chatId,
-      `📦 <b>${s.ordersTitle}</b> (${res.total})\n\n${lines.join('\n\n')}`,
+      `${this.emojis.html('orders', '📦')} <b>${s.ordersTitle}</b> · ${res.total}\n<i>Tap an order to view key &amp; guide 👇</i>`,
       { inline_keyboard: keyboard },
       messageId,
       wasPhoto,
@@ -508,34 +567,44 @@ export class BotMenuService {
       return;
     }
 
-    const icon = tgEmoji(order.product?.emojiId, '📦');
+    const prodEmojiId = order.product ? this.emojis.productEmojiId(order.product) : null;
+    const icon = prodEmojiId ? tgEmoji(prodEmojiId, '📦') : this.emojis.html('orders', '📦');
     const header =
       `${icon} <b>${escapeHtml(order.product?.name || 'Order')}</b>\n` +
-      `🧾 Ref: <code>${escapeHtml(order.txRef)}</code>\n` +
-      `💰 Amount: <b>${order.amount === 0 ? 'Reward (Free)' : `${Number(order.amount).toLocaleString()} ${order.currency}`}</b>\n` +
-      `📌 Status: <b>${escapeHtml(order.status)}</b> (${escapeHtml(order.fulfillmentStatus || 'NONE')})\n\n`;
+      `${this.emojis.html('details', '🧾')} <code>${escapeHtml(order.txRef)}</code>\n` +
+      `${this.emojis.html('money', '💰')} <b>${order.amount === 0 ? 'Reward (Free)' : `${Number(order.amount).toLocaleString()} ${order.currency}`}</b>\n` +
+      `${this.emojis.html(order.status === 'PAID' ? 'success' : 'pending', '📌')} <b>${escapeHtml(order.status)}</b> (${escapeHtml(order.fulfillmentStatus || 'NONE')})\n\n`;
 
     if (order.status !== 'PAID') {
       const keyboard: InlineButton[][] = [];
       if (order.paymentMode === 'mock') {
-        keyboard.push([{ text: '🧪 Complete Test Payment', callback_data: `pm:${order.id}`, style: 'success' }]);
+        keyboard.push([
+          { text: 'Complete Test Payment', callback_data: `pm:${order.id}`, style: 'success', ...this.emojis.btnIcon('pay') },
+        ]);
       } else if (order.paymentUrl && /^https?:\/\//i.test(order.paymentUrl)) {
-        keyboard.push([{ text: '💳 Pay Now (Chapa)', url: order.paymentUrl, style: 'success' }]);
-        keyboard.push([{ text: '🔄 Check Payment Status', callback_data: `pv:${order.cartRef || order.txRef}`, style: 'primary' }]);
+        keyboard.push([{ text: 'Pay Now (Chapa)', url: order.paymentUrl, style: 'success', ...this.emojis.btnIcon('pay') }]);
+        keyboard.push([
+          {
+            text: 'Check Payment Status',
+            callback_data: `pv:${order.cartRef || order.txRef}`,
+            style: 'primary',
+            ...this.emojis.btnIcon('pending'),
+          },
+        ]);
       }
-      keyboard.push([{ text: '⬅️ My Orders', callback_data: 'ord:0' }]);
-      await this.showOrEditText(chatId, `${header}⏳ <i>Awaiting payment confirmation.</i>`, { inline_keyboard: keyboard }, messageId, wasPhoto);
+      keyboard.push([{ text: 'My Orders', callback_data: 'ord:0', ...this.emojis.btnIcon('back') }]);
+      await this.showOrEditText(chatId, `${header}<i>Awaiting payment confirmation.</i>`, { inline_keyboard: keyboard }, messageId, wasPhoto);
       return;
     }
 
     if (!order.licenseKey) {
       await this.showOrEditText(
         chatId,
-        `${header}⏳ <i>Your order is paid and currently being fulfilled. Check back in a few seconds!</i>`,
+        `${header}<i>Your order is paid and currently being fulfilled. Check back in a few seconds!</i>`,
         {
           inline_keyboard: [
-            [{ text: '🔄 Refresh Delivery', callback_data: `o:${order.id}`, style: 'primary' }],
-            [{ text: '⬅️ My Orders', callback_data: 'ord:0' }],
+            [{ text: 'Refresh Delivery', callback_data: `o:${order.id}`, style: 'primary', ...this.emojis.btnIcon('pending') }],
+            [{ text: 'My Orders', callback_data: 'ord:0', ...this.emojis.btnIcon('back') }],
           ],
         },
         messageId,
@@ -550,24 +619,28 @@ export class BotMenuService {
         chatId,
         `${order.txRef}.txt`,
         order.licenseKey,
-        `${header}📄 Your delivery is attached as a file above.`,
+        `${header}Your delivery is attached as a file above.`,
         {
           inline_keyboard: [
-            [{ text: '📖 Activation Guide', callback_data: `og:${order.id}`, style: 'primary' }],
-            [{ text: '⬅️ My Orders', callback_data: 'ord:0' }],
+            [{ text: 'Activation Guide', callback_data: `og:${order.id}`, style: 'primary', ...this.emojis.btnIcon('guide') }],
+            [{ text: 'My Orders', callback_data: 'ord:0', ...this.emojis.btnIcon('back') }],
           ],
         },
       );
       return;
     }
 
-    const keyboard: InlineButton[][] = formatted.urls.map((u) => [{ text: u.label, url: u.url, style: 'primary' }]);
+    const keyboard: InlineButton[][] = formatted.urls.map((u) => [
+      { text: u.label, url: u.url, style: 'primary', ...this.emojis.btnIcon('share') },
+    ]);
     if (order.product?.activationGuide) {
-      keyboard.push([{ text: '📖 Activation Guide', callback_data: `og:${order.id}`, style: 'success' }]);
+      keyboard.push([
+        { text: 'Activation Guide', callback_data: `og:${order.id}`, style: 'success', ...this.emojis.btnIcon('guide') },
+      ]);
     }
     keyboard.push([
-      { text: '⬅️ My Orders', callback_data: 'ord:0' },
-      { text: '🛍 Store', callback_data: 'h:0' },
+      { text: 'My Orders', callback_data: 'ord:0', ...this.emojis.btnIcon('back') },
+      { text: 'Store', callback_data: 'h:0', ...this.emojis.btnIcon('shop') },
     ]);
 
     await this.showOrEditText(chatId, `${header}${formatted.html}`, { inline_keyboard: keyboard }, messageId, wasPhoto);
@@ -582,7 +655,7 @@ export class BotMenuService {
     }
     const guide = order.product?.activationGuide;
     if (!guide) {
-      await this.telegram.sendMessage(chatId, 'ℹ️ No activation guide needed — just paste your key!');
+      await this.telegram.sendMessage(chatId, 'No activation guide needed — just paste your key!');
       return;
     }
 
@@ -593,14 +666,14 @@ export class BotMenuService {
       : '<i>Follow the notes below.</i>';
 
     const text =
-      `📖 <b>Activation Guide — ${escapeHtml(loc.name)}</b>\n\n` +
+      `${this.emojis.html('guide', '📖')} <b>Activation Guide — ${escapeHtml(loc.name)}</b>\n\n` +
       `${stepsText}` +
-      (guide.notes ? `\n\n📝 <b>Note:</b> ${escapeHtml(guide.notes)}` : '');
+      (guide.notes ? `\n\n${this.emojis.html('details', '📝')} <b>Note:</b> ${escapeHtml(guide.notes)}` : '');
 
     const keyboard: InlineButton[][] = [];
-    if (guide.downloadUrl) keyboard.push([{ text: '⬇️ Download Link', url: guide.downloadUrl, style: 'primary' }]);
-    if (guide.videoUrl) keyboard.push([{ text: '🎬 Video Tutorial', url: guide.videoUrl, style: 'primary' }]);
-    keyboard.push([{ text: '⬅️ Back to Order & Key', callback_data: `o:${order.id}`, style: 'success' }]);
+    if (guide.downloadUrl) keyboard.push([{ text: 'Download Link', url: guide.downloadUrl, style: 'primary', ...this.emojis.btnIcon('share') }]);
+    if (guide.videoUrl) keyboard.push([{ text: 'Video Tutorial', url: guide.videoUrl, style: 'primary', ...this.emojis.btnIcon('fire') }]);
+    keyboard.push([{ text: 'Back to Order & Key', callback_data: `o:${order.id}`, style: 'success', ...this.emojis.btnIcon('back') }]);
 
     await this.showOrEditText(chatId, text.slice(0, 4000), { inline_keyboard: keyboard }, messageId, wasPhoto);
   }
@@ -633,6 +706,7 @@ export class BotMenuService {
 
   /** Inline mode (@YourBot <query>): share & buy rich product cards in any chat! */
   async handleInlineQuery(inlineQuery: any) {
+    await this.emojis.warmUiPacks();
     const query = String(inlineQuery?.query || '').trim();
     const fromId = String(inlineQuery?.from?.id || '');
     const [products, tgUser, botUsername] = await Promise.all([
@@ -653,6 +727,7 @@ export class BotMenuService {
       const deepLink = botUsername
         ? `https://t.me/${botUsername}?start=r_${refCode}_p_${p.id}`
         : `https://t.me/`;
+      const emojiId = this.emojis.productEmojiId(p);
 
       return {
         type: 'article',
@@ -662,20 +737,20 @@ export class BotMenuService {
         ...(/^https?:\/\//i.test(p.bannerUrl || '') ? { thumbnail_url: p.bannerUrl } : {}),
         input_message_content: {
           message_text:
-            `${tgEmoji(p.emojiId, '🔑')} <b>${escapeHtml(p.name)}</b>\n` +
-            `💰 <b>${priceLabel}</b> · ${p.stock > 0 ? '🟢 In Stock' : '🔴 Out of Stock'}\n\n` +
+            `${emojiId ? tgEmoji(emojiId, '🔑') : this.emojis.html('key', '🔑')} <b>${escapeHtml(p.name)}</b>\n` +
+            `${this.emojis.html('money', '💰')} <b>${priceLabel}</b> · ${p.stock > 0 ? '🟢 In Stock' : '🔴 Out of Stock'}\n\n` +
             `${escapeHtml(p.shortDesc || '')}\n\n` +
-            `⚡ Pay instantly with Chapa inside Telegram:`,
+            `${this.emojis.html('fire', '⚡')} Pay instantly with Chapa inside Telegram:`,
           parse_mode: 'HTML',
         },
         reply_markup: {
           inline_keyboard: [
             [
               {
-                text: `⚡ Buy ${p.name} — ${priceLabel}`.slice(0, 56),
+                text: `Buy ${p.name} · ${priceLabel}`.slice(0, 56),
                 url: deepLink,
                 style: 'success',
-                ...(p.emojiId ? { icon_custom_emoji_id: p.emojiId } : {}),
+                ...(emojiId ? { icon_custom_emoji_id: emojiId } : {}),
               },
             ],
           ],

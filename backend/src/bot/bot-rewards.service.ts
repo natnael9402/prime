@@ -4,6 +4,7 @@ import { RewardsService } from '../rewards/rewards.service';
 import { AffiliatesService } from '../affiliates/affiliates.service';
 import { TelegramService, InlineButton, escapeHtml, tgEmoji } from '../telegram/telegram.service';
 import { BotStateService } from './bot-state.service';
+import { BotEmojiService } from './bot-emoji.service';
 import { BotLang } from './bot-i18n.service';
 import { formatDeliveryForTelegram } from './bot-delivery.formatter';
 
@@ -22,9 +23,11 @@ export class BotRewardsService {
     private readonly affiliates: AffiliatesService,
     private readonly telegram: TelegramService,
     private readonly state: BotStateService,
+    private readonly emojis: BotEmojiService,
   ) {}
 
   async showInviteHome(chatId: string | number, telegramId: string, lang: BotLang, messageId?: number) {
+    await this.emojis.warmUiPacks();
     const data = await this.rewards.getProgress(telegramId);
     const nextTier = data.tiers.find((t) => !t.unlocked) || null;
     const target = nextTier ? nextTier.requiredInvites : data.tiers[data.tiers.length - 1]?.requiredInvites || 15;
@@ -34,18 +37,18 @@ export class BotRewardsService {
     const tierLines = data.tiers.length
       ? data.tiers
           .map((t) => {
-            const icon = t.product?.emojiId ? tgEmoji(t.product.emojiId, '🎁') : '🎁';
+            const icon = t.product?.emojiId ? tgEmoji(t.product.emojiId, '🎁') : this.emojis.html('reward', '🎁');
             if (t.claim?.status === 'DELIVERED') {
-              return `✅ <b>${t.requiredInvites} Invites</b> — ${icon} ${escapeHtml(t.title)} <i>(Claimed)</i>`;
+              return `${this.emojis.html('success', '✅')} <b>${t.requiredInvites} Invites</b> — ${icon} ${escapeHtml(t.title)} <i>(Claimed)</i>`;
             }
             if (t.claim?.status === 'PENDING') {
-              return `⏳ <b>${t.requiredInvites} Invites</b> — ${icon} ${escapeHtml(t.title)} <i>(Pending approval)</i>`;
+              return `${this.emojis.html('pending', '⏳')} <b>${t.requiredInvites} Invites</b> — ${icon} ${escapeHtml(t.title)} <i>(Pending)</i>`;
             }
             if (t.unlocked) {
-              return `🎉 <b>${t.requiredInvites} Invites</b> — ${icon} ${escapeHtml(t.title)} <b>(READY TO CLAIM!)</b>`;
+              return `${this.emojis.html('unlock', '🎉')} <b>${t.requiredInvites} Invites</b> — ${icon} ${escapeHtml(t.title)} <b>(READY!)</b>`;
             }
             const left = t.requiredInvites - data.verifiedInvites;
-            return `🔒 <b>${t.requiredInvites} Invites</b> — ${icon} ${escapeHtml(t.title)} <i>(${left} left)</i>`;
+            return `${this.emojis.html('lock', '🔒')} <b>${t.requiredInvites} Invites</b> — ${icon} ${escapeHtml(t.title)} <i>(${left} left)</i>`;
           })
           .join('\n')
       : lang === 'am'
@@ -54,58 +57,57 @@ export class BotRewardsService {
 
     const header =
       lang === 'am'
-        ? `🎁 <b>ጓደኞችን ይጋብዙ &amp; ሽልማት ይክፈቱ!</b>`
-        : `🎁 <b>Invite Friends &amp; Unlock Rewards!</b>`;
+        ? `${this.emojis.html('reward', '🎁')} <b>ጓደኞችን ይጋብዙ &amp; ሽልማት ይክፈቱ!</b>`
+        : `${this.emojis.html('reward', '🎁')} <b>Invite Friends &amp; Unlock Rewards!</b>`;
 
     const text =
       `${header}\n\n` +
-      `👥 Verified Invites: <b>${data.verifiedInvites}</b>` +
+      `${this.emojis.html('user', '👥')} Verified Invites: <b>${data.verifiedInvites}</b>` +
       (data.pendingInvites > 0 ? ` <i>(+${data.pendingInvites} pending channel join)</i>` : '') +
       `\n<code>${bar}</code> <b>${pct}%</b>\n` +
       (nextTier
-        ? `🎯 <b>${nextTier.requiredInvites - data.verifiedInvites}</b> more invite(s) to unlock: <b>${escapeHtml(nextTier.title)}</b>\n`
+        ? `${this.emojis.html('fire', '🎯')} <b>${nextTier.requiredInvites - data.verifiedInvites}</b> more invite(s) to unlock: <b>${escapeHtml(nextTier.title)}</b>\n`
         : data.tiers.length > 0
-          ? `🏆 <b>All current milestones unlocked!</b>\n`
+          ? `${this.emojis.html('trophy', '🏆')} <b>All current milestones unlocked!</b>\n`
           : '') +
-      (data.storeCredit > 0 ? `💰 Store Credit: <b>${data.storeCredit.toLocaleString()} ETB</b>\n` : '') +
+      (data.storeCredit > 0 ? `${this.emojis.html('money', '💰')} Store Credit: <b>${data.storeCredit.toLocaleString()} ETB</b>\n` : '') +
       `\n<b>Milestones:</b>\n${tierLines}\n\n` +
-      `🔗 <b>Your Invite Link:</b>\n<code>${escapeHtml(data.inviteLink)}</code>` +
+      `${this.emojis.html('share', '🔗')} <b>Your Invite Link:</b>\n<code>${escapeHtml(data.inviteLink)}</code>` +
       (data.requiredChannel
-        ? `\n\n📢 <i>Note: Invited friends must join ${escapeHtml(data.requiredChannel)} to count.</i>`
+        ? `\n\n${this.emojis.html('bell', '📢')} <i>Invited friends must join ${escapeHtml(data.requiredChannel)} to count.</i>`
         : '');
 
     const keyboard: InlineButton[][] = [];
 
-    // Green Claim buttons for every unlocked unclaimed tier
     for (const tier of data.tiers) {
       if (tier.unlocked && !tier.claim) {
         keyboard.push([
           {
-            text: `🎉 Claim: ${tier.title}`.slice(0, 50),
+            text: `Claim: ${tier.title}`.slice(0, 50),
             callback_data: `rw:${tier.id}`,
             style: 'success',
-            ...(tier.product?.emojiId ? { icon_custom_emoji_id: tier.product.emojiId } : {}),
+            ...this.emojis.btnIcon('reward', tier.product?.emojiId),
           },
         ]);
       }
     }
 
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(data.inviteLink)}&text=${encodeURIComponent(
-      '🔑 Get instant digital keys & subscriptions on Prime Store — pay with Chapa right in Telegram!',
+      'Get instant digital keys on Access Store — pay with Chapa right in Telegram!',
     )}`;
 
     keyboard.push([
-      { text: '📤 Share Invite Link', url: shareUrl, style: 'primary' },
-      { text: '⚡ Send in Chat', switch_inline_query: '' },
+      { text: 'Share Invite Link', url: shareUrl, style: 'primary', ...this.emojis.btnIcon('share') },
+      { text: 'Send in Chat', switch_inline_query: '', ...this.emojis.btnIcon('fire') },
     ]);
 
     if (data.requiredChannel) {
-      keyboard.push([{ text: '✅ Refresh / Verify Channel', callback_data: 'rew:verify' }]);
+      keyboard.push([{ text: 'Refresh / Verify Channel', callback_data: 'rew:verify', ...this.emojis.btnIcon('success') }]);
     }
 
     keyboard.push([
-      { text: '💼 Cash Affiliate (10%)', callback_data: 'aff:dash', style: 'primary' },
-      { text: '🏠 Home', callback_data: 'h:0' },
+      { text: 'Cash Affiliate (10%)', callback_data: 'aff:dash', style: 'primary', ...this.emojis.btnIcon('affiliate') },
+      { text: 'Home', callback_data: 'h:0', ...this.emojis.btnIcon('back') },
     ]);
 
     const markup = { inline_keyboard: keyboard };
@@ -158,19 +160,20 @@ export class BotRewardsService {
     lang: BotLang,
     messageId?: number,
   ) {
+    await this.emojis.warmUiPacks();
     const telegramId = String(from.id);
     const existing = await this.prisma.affiliate.findFirst({ where: { telegramUserId: telegramId } });
 
     if (!existing) {
       const text =
-        `🤝 <b>Affiliate Cash Program (10%)</b>\n\n` +
-        `Earn <b>10% cash commission</b> every time someone buys through your link — withdraw via <b>Telebirr</b> or <b>CBE Birr</b>!\n\n` +
+        `${this.emojis.html('affiliate', '🤝')} <b>Affiliate Cash Program (10%)</b>\n\n` +
+        `${this.emojis.html('money', '💰')} Earn <b>10% cash commission</b> every time someone buys through your link — withdraw via <b>Telebirr</b> or <b>CBE Birr</b>!\n\n` +
         `Tap below to activate your affiliate account in 1 second.`;
       const markup = {
         inline_keyboard: [
-          [{ text: '🚀 Activate Affiliate (1-Tap)', callback_data: 'aff:join', style: 'success' }],
-          [{ text: '🎁 Back to Invite Rewards', callback_data: 'rew:home', style: 'primary' }],
-          [{ text: '🏠 Home', callback_data: 'h:0' }],
+          [{ text: 'Activate Affiliate (1-Tap)', callback_data: 'aff:join', style: 'success', ...this.emojis.btnIcon('fire') }],
+          [{ text: 'Back to Invite Rewards', callback_data: 'rew:home', style: 'primary', ...this.emojis.btnIcon('reward') }],
+          [{ text: 'Home', callback_data: 'h:0', ...this.emojis.btnIcon('back') }],
         ],
       };
       if (messageId) {
@@ -183,7 +186,7 @@ export class BotRewardsService {
 
     const stats = await this.affiliates.getStats(existing.code);
     const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(stats.link)}&text=${encodeURIComponent(
-      '🔑 Get instant digital keys on Prime Store — pay with Chapa right in Telegram!',
+      'Get instant digital keys on Access Store — pay with Chapa right in Telegram!',
     )}`;
 
     const recentText = stats.recentSales.length
@@ -197,31 +200,32 @@ export class BotRewardsService {
       : '<i>No sales yet — share your link to start earning!</i>';
 
     const text =
-      `💼 <b>Affiliate Dashboard</b> (<code>${escapeHtml(stats.code)}</code>)\n\n` +
-      `📊 Rate: <b>${Math.round(stats.commissionRate * 100)}%</b> per paid sale\n` +
-      `👆 Clicks: <b>${stats.clicks}</b> · 🛒 Sales: <b>${stats.sales}</b>\n` +
-      `💰 Pending: <b>${stats.pending.toLocaleString()} ETB</b>\n` +
-      `✅ Paid Out: <b>${stats.paid.toLocaleString()} ETB</b>\n\n` +
-      `🔗 <b>Your Affiliate Link:</b>\n<code>${escapeHtml(stats.link)}</code>\n\n` +
+      `${this.emojis.html('affiliate', '💼')} <b>Affiliate Dashboard</b> (<code>${escapeHtml(stats.code)}</code>)\n\n` +
+      `${this.emojis.html('chart', '📊')} Rate: <b>${Math.round(stats.commissionRate * 100)}%</b> per paid sale\n` +
+      `${this.emojis.html('user', '👆')} Clicks: <b>${stats.clicks}</b> · ${this.emojis.html('shop', '🛒')} Sales: <b>${stats.sales}</b>\n` +
+      `${this.emojis.html('money', '💰')} Pending: <b>${stats.pending.toLocaleString()} ETB</b>\n` +
+      `${this.emojis.html('success', '✅')} Paid Out: <b>${stats.paid.toLocaleString()} ETB</b>\n\n` +
+      `${this.emojis.html('share', '🔗')} <b>Your Affiliate Link:</b>\n<code>${escapeHtml(stats.link)}</code>\n\n` +
       `<b>Recent Commissions:</b>\n${recentText}`;
 
     const keyboard: InlineButton[][] = [
-      [{ text: '📤 Share Affiliate Link', url: shareUrl, style: 'primary' }],
+      [{ text: 'Share Affiliate Link', url: shareUrl, style: 'primary', ...this.emojis.btnIcon('share') }],
     ];
 
     if (stats.pending > 0) {
       keyboard.push([
         {
-          text: `💸 Request Payout (${stats.pending.toLocaleString()} ETB)`,
+          text: `Request Payout (${stats.pending.toLocaleString()} ETB)`,
           callback_data: 'aff:pay',
           style: 'success',
+          ...this.emojis.btnIcon('money'),
         },
       ]);
     }
 
     keyboard.push([
-      { text: '🎁 Invite Rewards', callback_data: 'rew:home' },
-      { text: '🏠 Home', callback_data: 'h:0' },
+      { text: 'Invite Rewards', callback_data: 'rew:home', ...this.emojis.btnIcon('reward') },
+      { text: 'Home', callback_data: 'h:0', ...this.emojis.btnIcon('back') },
     ]);
 
     const markup = { inline_keyboard: keyboard };
@@ -248,14 +252,14 @@ export class BotRewardsService {
   }
 
   async startPayoutWizard(chatId: string | number, messageId?: number) {
-    const text = `💸 <b>Request Payout</b>\n\nChoose your payout method:`;
+    const text = `${this.emojis.html('money', '💸')} <b>Request Payout</b>\n\nChoose your payout method:`;
     const markup = {
       inline_keyboard: [
         [
-          { text: '📱 Telebirr', callback_data: 'aff:m:telebirr', style: 'success' },
-          { text: '🏦 CBE Birr', callback_data: 'aff:m:cbe', style: 'primary' },
+          { text: 'Telebirr', callback_data: 'aff:m:telebirr', style: 'success', ...this.emojis.btnIcon('pay') },
+          { text: 'CBE Birr', callback_data: 'aff:m:cbe', style: 'primary', ...this.emojis.btnIcon('money') },
         ],
-        [{ text: '❌ Cancel', callback_data: 'aff:dash', style: 'danger' }],
+        [{ text: 'Cancel', callback_data: 'aff:dash', style: 'danger', ...this.emojis.btnIcon('cancel') }],
       ],
     };
     if (messageId) {

@@ -79,6 +79,25 @@ export default function BotEmojiPicker({
 
       {open && (
         <div className="rounded-2xl border border-white/10 bg-[#0b1220] p-3 space-y-3">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {['hubxemoji', 'FinanceEmoji', 'NewsEmoji'].map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                onClick={() => {
+                  setPackName(preset);
+                  loadPack(preset);
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-black border transition-colors ${
+                  packName.toLowerCase() === preset.toLowerCase()
+                    ? 'bg-amber-400/20 border-amber-400 text-amber-300'
+                    : 'bg-white/[0.04] border-white/10 text-slate-400 hover:text-white'
+                }`}
+              >
+                {preset}
+              </button>
+            ))}
+          </div>
           <div className="flex items-center gap-2">
             <input
               value={packName}

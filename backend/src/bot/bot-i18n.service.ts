@@ -1,16 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { ReplyButton } from '../telegram/telegram.service';
+import { BotEmojiService } from './bot-emoji.service';
 
 export type BotLang = 'en' | 'am';
 
 const STRINGS = {
   en: {
-    btnShop: '🛍 Shop',
-    btnOrders: '📦 My Orders',
-    btnInvite: '🎁 Invite & Earn',
-    btnSearch: '🔍 Search',
-    btnLang: '🌐 አማ / EN',
-    btnHelp: '❓ Support',
+    btnShop: 'Shop',
+    btnOrders: 'My Orders',
+    btnInvite: 'Invite & Earn',
+    btnSearch: 'Search',
+    btnLang: 'አማ / EN',
+    btnHelp: 'Support',
     welcomeTitle: 'Access Store',
     welcomeSub: 'Instant digital keys · Pay with Chapa inside Telegram',
     pickCategory: 'Choose a category',
@@ -20,26 +21,26 @@ const STRINGS = {
     outOfStock: 'Out of stock',
     instantDelivery: 'Instant',
     buyNow: 'Buy Now',
-    notifyMe: 'Notify Me When Back',
+    notifyMe: 'Notify When Back',
     notifyDone: "You're on the restock list! We'll DM you when it's back.",
-    searchPrompt: '🔍 Send the product name you are looking for (e.g. <i>Gemini</i>, <i>Canva</i>, <i>VPN</i>):',
+    searchPrompt: 'Send the product name you are looking for (e.g. <i>Gemini</i>, <i>Canva</i>, <i>Spotify</i>):',
     searchEmpty: 'No matching products found. Try another keyword.',
     ordersTitle: 'My Orders',
     noOrders: 'You have no orders yet. Tap Shop to grab your first key!',
-    langSwitched: '🌐 Language switched to <b>English</b>.',
+    langSwitched: 'Language switched to <b>English</b>.',
     helpText:
-      '❓ <b>Help &amp; Support</b>\n\n' +
-      '• Tap <b>🛍 Shop</b> to browse products and tap <b>⚡ Buy Now</b> to pay with Chapa right inside Telegram.\n' +
+      '<b>Help &amp; Support</b>\n\n' +
+      '• Tap <b>Shop</b> to browse products and tap <b>Buy Now</b> to pay with Chapa right inside Telegram.\n' +
       '• Keys &amp; accounts arrive instantly in your Orders &amp; chat after payment.\n' +
-      '• Tap <b>🎁 Invite &amp; Earn</b> to share your link and unlock free rewards!',
+      '• Tap <b>Invite &amp; Earn</b> to share your link and unlock free rewards!',
   },
   am: {
-    btnShop: '🛍 ሱቅ',
-    btnOrders: '📦 ትዕዛዞቼ',
-    btnInvite: '🎁 ጋብዘው ይሸለሙ',
-    btnSearch: '🔍 ፈልግ',
-    btnLang: '🌐 EN / አማ',
-    btnHelp: '❓ እርዳታ',
+    btnShop: 'ሱቅ',
+    btnOrders: 'ትዕዛዞቼ',
+    btnInvite: 'ጋብዘው ይሸለሙ',
+    btnSearch: 'ፈልግ',
+    btnLang: 'EN / አማ',
+    btnHelp: 'እርዳታ',
     welcomeTitle: 'Access Store',
     welcomeSub: 'ፈጣን ዲጂታል ቁልፎች · በቻፓ እዚሁ ቴሌግራም ውስጥ ይክፈሉ',
     pickCategory: 'ምድብ ይምረጡ',
@@ -51,21 +52,23 @@ const STRINGS = {
     buyNow: 'አሁን ይግዙ',
     notifyMe: 'ሲመለስ አሳውቀኝ',
     notifyDone: 'ተመዝግበዋል! ምርቱ ሲመለስ ወዲያውኑ መልዕክት እንልክልዎታለን።',
-    searchPrompt: '🔍 የሚፈልጉትን ምርት ስም ይጻፉ (ለምሳሌ: <i>Gemini</i>, <i>Canva</i>, <i>VPN</i>):',
+    searchPrompt: 'የሚፈልጉትን ምርት ስም ይጻፉ (ለምሳሌ: <i>Gemini</i>, <i>Canva</i>, <i>Spotify</i>):',
     searchEmpty: 'ተመሳሳይ ምርት አልተገኘም። ሌላ ቃል ይሞክሩ።',
     ordersTitle: 'ትዕዛዞቼ',
     noOrders: 'እስካሁን ምንም ትዕዛዝ የለዎትም። ሱቁን በመክፈት ይግዙ!',
-    langSwitched: '🌐 ቋንቋ ወደ <b>አማርኛ</b> ተቀይሯል።',
+    langSwitched: 'ቋንቋ ወደ <b>አማርኛ</b> ተቀይሯል።',
     helpText:
-      '❓ <b>እርዳታ እና ድጋፍ</b>\n\n' +
-      '• <b>🛍 ሱቅ</b> በመጫን ምርቶችን ይመልከቱ እና <b>⚡ አሁን ይግዙ</b> በመጫን በቻፓ እዚሁ ይክፈሉ።\n' +
+      '<b>እርዳታ እና ድጋፍ</b>\n\n' +
+      '• <b>ሱቅ</b> በመጫን ምርቶችን ይመልከቱ እና <b>አሁን ይግዙ</b> በመጫን በቻፓ እዚሁ ይክፈሉ።\n' +
       '• ክፍያ እንደተፈጸመ ቁልፍዎ ወዲያውኑ እዚህ ይላካል።\n' +
-      '• <b>🎁 ጋብዘው ይሸለሙ</b> በመጫን ጓደኞችዎን ይጋብዙና ነጻ ሽልማቶችን ይክፈቱ!',
+      '• <b>ጋብዘው ይሸለሙ</b> በመጫን ጓደኞችዎን ይጋብዙና ነጻ ሽልማቶችን ይክፈቱ!',
   },
 } as const;
 
 @Injectable()
 export class BotI18nService {
+  constructor(private readonly emojis: BotEmojiService) {}
+
   normalizeLang(code?: string | null): BotLang {
     return code === 'am' ? 'am' : 'en';
   }
@@ -74,20 +77,45 @@ export class BotI18nService {
     return STRINGS[lang] || STRINGS.en;
   }
 
+  private dockLabel(role: Parameters<BotEmojiService['resolveId']>[0], fallbackEmoji: string, label: string) {
+    // If custom emoji icon is present on the button, keep label clean; else prepend standard emoji
+    return this.emojis.resolveId(role) ? label : `${fallbackEmoji} ${label}`;
+  }
+
   mainReplyKeyboard(lang: BotLang) {
     const s = this.t(lang);
     const keyboard: ReplyButton[][] = [
       [
-        { text: s.btnShop, style: 'primary' },
-        { text: s.btnOrders },
+        {
+          text: this.dockLabel('shop', '🛍', s.btnShop),
+          style: 'primary',
+          ...this.emojis.btnIcon('shop'),
+        },
+        {
+          text: this.dockLabel('orders', '📦', s.btnOrders),
+          ...this.emojis.btnIcon('orders'),
+        },
       ],
       [
-        { text: s.btnInvite, style: 'success' },
-        { text: s.btnSearch },
+        {
+          text: this.dockLabel('invite', '🎁', s.btnInvite),
+          style: 'success',
+          ...this.emojis.btnIcon('invite'),
+        },
+        {
+          text: this.dockLabel('search', '🔍', s.btnSearch),
+          ...this.emojis.btnIcon('search'),
+        },
       ],
       [
-        { text: s.btnLang },
-        { text: s.btnHelp },
+        {
+          text: this.dockLabel('lang', '🌐', s.btnLang),
+          ...this.emojis.btnIcon('lang'),
+        },
+        {
+          text: this.dockLabel('support', '❓', s.btnHelp),
+          ...this.emojis.btnIcon('support'),
+        },
       ],
     ];
     return {
@@ -97,17 +125,17 @@ export class BotI18nService {
     };
   }
 
-  /** Detect if a text message matches any localized Reply Keyboard button. */
+  /** Detect if a text message matches any localized Reply Keyboard button (with or without fallback emoji). */
   matchReplyButton(text: string): 'SHOP' | 'ORDERS' | 'INVITE' | 'SEARCH' | 'LANG' | 'HELP' | null {
     const t = (text || '').trim();
     for (const lang of ['en', 'am'] as BotLang[]) {
       const s = STRINGS[lang];
-      if (t === s.btnShop) return 'SHOP';
-      if (t === s.btnOrders) return 'ORDERS';
-      if (t === s.btnInvite) return 'INVITE';
-      if (t === s.btnSearch) return 'SEARCH';
-      if (t === s.btnLang) return 'LANG';
-      if (t === s.btnHelp) return 'HELP';
+      if (t === s.btnShop || t.endsWith(` ${s.btnShop}`)) return 'SHOP';
+      if (t === s.btnOrders || t.endsWith(` ${s.btnOrders}`)) return 'ORDERS';
+      if (t === s.btnInvite || t.endsWith(` ${s.btnInvite}`)) return 'INVITE';
+      if (t === s.btnSearch || t.endsWith(` ${s.btnSearch}`)) return 'SEARCH';
+      if (t === s.btnLang || t.endsWith(` ${s.btnLang}`)) return 'LANG';
+      if (t === s.btnHelp || t.endsWith(` ${s.btnHelp}`)) return 'HELP';
     }
     return null;
   }

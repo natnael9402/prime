@@ -3,8 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import AdminNavbar from '@/components/AdminNavbar';
 import { api } from '@/lib/api';
-import { Plus, Trash2, Key, RefreshCw, X, Package, Settings2, Pencil, Bell, BellRing } from 'lucide-react';
+import { Plus, Trash2, Key, RefreshCw, X, Package, Settings2, Pencil, Bell, BellRing, Smile } from 'lucide-react';
 import ProductEditorModal from '@/components/ProductEditorModal';
+import BotEmojiPicker from '@/components/BotEmojiPicker';
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
@@ -36,6 +37,12 @@ export default function AdminProductsPage() {
   });
   const [savingPricing, setSavingPricing] = useState(false);
   const [globalSettings, setGlobalSettings] = useState<any>(null);
+
+  // Category emojis modal state
+  const [catsOpen, setCatsOpen] = useState(false);
+  const [editingCat, setEditingCat] = useState<any>(null);
+  const [catEmojiDraft, setCatEmojiDraft] = useState('');
+  const [savingCat, setSavingCat] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -177,16 +184,25 @@ export default function AdminProductsPage() {
             </h1>
             <p className="text-[11px] text-slate-500">Add products, manage pricing and license key stock.</p>
           </div>
-          <button
-            onClick={() => {
-              setEditorProduct(null);
-              setEditorOpen(true);
-            }}
-            className="btn-primary px-4 py-2 rounded-xl text-[11px] font-black flex items-center gap-1.5"
-          >
-            <Plus className="w-3.5 h-3.5 stroke-[3]" />
-            <span>New Product</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCatsOpen(true)}
+              className="btn-ghost px-3.5 py-2 rounded-xl text-[11px] font-black text-sky-300 flex items-center gap-1.5 border border-sky-500/25"
+            >
+              <Smile className="w-3.5 h-3.5" />
+              <span>Category Emojis</span>
+            </button>
+            <button
+              onClick={() => {
+                setEditorProduct(null);
+                setEditorOpen(true);
+              }}
+              className="btn-primary px-4 py-2 rounded-xl text-[11px] font-black flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[3]" />
+              <span>New Product</span>
+            </button>
+          </div>
         </div>
 
         {loading ? (
@@ -502,6 +518,65 @@ export default function AdminProductsPage() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {catsOpen && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="glass rounded-3xl w-full max-w-lg p-5 space-y-4 fade-up max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <h2 className="text-sm font-black text-white flex items-center gap-2">
+                <Smile className="w-4 h-4 text-sky-400" /> Category Bot Emojis
+              </h2>
+              <button onClick={() => { setCatsOpen(false); setEditingCat(null); }} className="text-slate-500 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-2">
+              {categories.map((cat) => (
+                <div key={cat.id} className="p-3 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-black text-white">{cat.name}</div>
+                      <div className="text-[10px] text-slate-500 font-mono">
+                        {cat.emojiId ? `emojiId: ${cat.emojiId}` : 'No custom emoji set'}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setEditingCat(editingCat?.id === cat.id ? null : cat);
+                        setCatEmojiDraft(cat.emojiId || '');
+                      }}
+                      className="btn-ghost px-3 py-1.5 rounded-xl text-[10px] font-black text-amber-300"
+                    >
+                      {editingCat?.id === cat.id ? 'Close' : 'Pick Emoji'}
+                    </button>
+                  </div>
+                  {editingCat?.id === cat.id && (
+                    <div className="pt-2 space-y-2">
+                      <BotEmojiPicker value={catEmojiDraft} onChange={setCatEmojiDraft} />
+                      <button
+                        disabled={savingCat}
+                        onClick={async () => {
+                          setSavingCat(true);
+                          try {
+                            await api.updateCategory(cat.id, { emojiId: catEmojiDraft.trim() || null });
+                            setEditingCat(null);
+                            await loadData();
+                          } finally {
+                            setSavingCat(false);
+                          }
+                        }}
+                        className="btn-primary px-4 py-2 rounded-xl text-[11px] font-black"
+                      >
+                        {savingCat ? 'Saving…' : 'Save Category Emoji'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}

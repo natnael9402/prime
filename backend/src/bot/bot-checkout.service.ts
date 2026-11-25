@@ -7,6 +7,7 @@ import { RewardsService } from '../rewards/rewards.service';
 import { UsersService } from '../users/users.service';
 import { TelegramService, escapeHtml, tgEmoji } from '../telegram/telegram.service';
 import { BotStateService } from './bot-state.service';
+import { BotEmojiService } from './bot-emoji.service';
 import { BotLang } from './bot-i18n.service';
 
 @Injectable()
@@ -22,6 +23,7 @@ export class BotCheckoutService {
     private readonly users: UsersService,
     private readonly telegram: TelegramService,
     private readonly state: BotStateService,
+    private readonly emojis: BotEmojiService,
   ) {}
 
   get providerToken(): string {
@@ -175,7 +177,7 @@ export class BotCheckoutService {
         reply_markup: {
           inline_keyboard: [
             [{ text: `💳 Pay ${finalTotal.toLocaleString()} ETB · Chapa`, pay: true }],
-            [{ text: '← Cancel', callback_data: `inv:cancel:${txRef}` }],
+            [{ text: 'Cancel', callback_data: `inv:cancel:${txRef}`, ...this.emojis.btnIcon('cancel') }],
           ],
         },
       });
