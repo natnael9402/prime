@@ -15,10 +15,15 @@ export interface EmojiPackItem {
 export type UiEmojiRole =
   | 'store'
   | 'shop'
+  | 'cart'
+  | 'home'
   | 'featured'
+  | 'crown'
+  | 'shield'
   | 'product'
   | 'key'
   | 'money'
+  | 'coin'
   | 'pay'
   | 'credit'
   | 'orders'
@@ -35,6 +40,7 @@ export type UiEmojiRole =
   | 'success'
   | 'pending'
   | 'fire'
+  | 'rocket'
   | 'guide'
   | 'details'
   | 'back'
@@ -43,36 +49,83 @@ export type UiEmojiRole =
   | 'unlock'
   | 'cancel';
 
+/**
+ * Visually verified animated custom_emoji_ids from FinanceEmoji & NewsEmoji.
+ * Falls back dynamically to Unicode lookup from loaded packs if a pack changes.
+ */
+const PINNED_ANIMATED_IDS: Partial<Record<UiEmojiRole, string>> = {
+  store: '5427168083074628963',     // NewsEmoji[66] animated glowing diamond
+  shop: '5278702045883292456',      // FinanceEmoji[44] animated storefront awning
+  cart: '5312361253610475399',      // FinanceEmoji[33] animated shopping cart
+  home: '5416041192905265756',      // NewsEmoji[97] animated house
+  featured: '5438496463044752972',  // NewsEmoji[67] animated golden star
+  crown: '5217822164362739968',     // NewsEmoji[69] animated golden crown
+  shield: '5197288647275071607',    // FinanceEmoji[51] animated blue check shield
+  money: '5197434882321567830',     // FinanceEmoji[1] animated green $
+  coin: '5199552030615558774',      // FinanceEmoji[12] animated gold coin
+  pay: '5445353829304387411',       // FinanceEmoji[14] animated credit card
+  credit: '5240228673738527951',    // FinanceEmoji[56] animated gold SALE tag
+  orders: '5444856076954520455',    // FinanceEmoji[23] animated receipt
+  invite: '5461151367559141950',    // NewsEmoji[99] animated party popper
+  reward: '5278467510604160626',    // FinanceEmoji[59] animated golden treasure chest
+  trophy: '5440539497383087970',    // NewsEmoji[89] animated #1 gold medal
+  search: '5231012545799666522',    // NewsEmoji[50] animated magnifying glass
+  lang: '5447410659077661506',      // NewsEmoji[13] animated globe
+  support: '5443038326535759644',   // NewsEmoji[14] animated chat bubbles
+  bell: '5458603043203327669',      // NewsEmoji[26] animated bell
+  share: '5201691993775818138',     // FinanceEmoji[19] animated green paper plane
+  affiliate: '5445221832074483553', // FinanceEmoji[46] animated briefcase
+  user: '5332724926216428039',      // FinanceEmoji[28] animated connected users network
+  chart: '5429651785352501917',     // FinanceEmoji[32] animated growth chart
+  success: '5206607081334906820',   // NewsEmoji[23] animated green check
+  cancel: '5210952531676504517',    // NewsEmoji[24] animated red cross
+  pending: '5386367538735104399',   // NewsEmoji[79] animated loading spinner
+  fire: '5456140674028019486',      // NewsEmoji[2] animated lightning bolt
+  rocket: '5195033767969839232',    // FinanceEmoji[50] animated rocket
+  details: '5334544901428229844',   // NewsEmoji[55] animated info badge
+  guide: '5422439311196834318',     // NewsEmoji[88] animated lightbulb
+  lock: '5296369303661067030',      // NewsEmoji[73] animated padlock
+  unlock: '5406756500108501710',    // NewsEmoji[93] animated FREE badge
+  key: '5325547803936572038',       // NewsEmoji[68] animated sparkles
+  product: '5427168083074628963',   // NewsEmoji[66] animated diamond
+};
+
 const ROLE_CANDIDATES: Record<UiEmojiRole, string[]> = {
-  store: ['💎', '🛍️', '🛍', '🏪', '✨', '⚡'],
-  shop: ['🛍️', '🛍', '🛒', '💎', '🏪', '📦'],
-  featured: ['⭐', '🌟', '🔥', '⚡', '✨', '💎'],
-  product: ['📦', '💎', '🔑', '⚡', '✨', '🎁'],
-  key: ['🔑', '🗝️', '🔐', '💎', '⚡'],
-  money: ['💰', '💵', '💸', '🪙', '💲', '🏦', '💳', '💎'],
-  pay: ['💳', '💵', '💰', '💸', '⚡', '🏦'],
-  credit: ['🎟️', '🎟', '🪙', '💰', '💵', '🎁'],
-  orders: ['📦', '🧾', '📋', '🛍️', '✅'],
-  invite: ['🎁', '🎉', '👥', '🤝', '🚀', '💎'],
-  reward: ['🎁', '🏆', '🥇', '🎉', '💎', '⭐'],
-  trophy: ['🏆', '🥇', '👑', '⭐', '💎'],
-  search: ['🔍', '🔎', '📰', '📋', '💡'],
-  lang: ['🌐', '🌍', '🌎', '🗺️', '💬'],
-  support: ['💬', '❓', '💡', '📢', '📰'],
-  bell: ['🔔', '📢', '📣', '⚡', '📰'],
-  share: ['📤', '🔗', '🚀', '📢', '✈️'],
-  affiliate: ['🤝', '💼', '📈', '💸', '💰'],
-  chart: ['📊', '📈', '💹', '💰', '📰'],
-  success: ['✅', '☑️', '✔️', '🟢', '🎉'],
-  pending: ['⏳', '🕒', '⌛', '🔄'],
-  fire: ['🔥', '⚡', '🚀', '✨', '💥'],
-  guide: ['📖', '📘', '📰', '📋', '💡'],
-  details: ['📋', '📰', 'ℹ️', '📄', '🔍'],
-  back: ['⬅️', '◀️', '🔙', '↩️'],
-  user: ['👤', '👥', '🧑', '🙋'],
-  lock: ['🔒', '🔐', '🛡️'],
-  unlock: ['🔓', '🎉', '✨', '🔑'],
-  cancel: ['❌', '✖️', '🚫', '🔴'],
+  store: ['💎', '🛍️', '🛍', '🏪', '✨'],
+  shop: ['🛍️', '🛍', '🛒', '💎', '🏪'],
+  cart: ['🛒', '🛍️', '🛍'],
+  home: ['🏠', '🏡', '💎'],
+  featured: ['⭐', '🌟', '🔥', '⚡'],
+  crown: ['👑', '🏆', '⭐'],
+  shield: ['🛡️', '🛡', '✅'],
+  product: ['📦', '💎', '🔑', '⚡'],
+  key: ['🔑', '✨', '🔐', '💎'],
+  money: ['💰', '💵', '💸', '🪙'],
+  coin: ['🪙', '💰', '💵'],
+  pay: ['💳', '💵', '💰'],
+  credit: ['🏷️', '🏷', '🎟', '🪙'],
+  orders: ['🧾', '📦', '📋'],
+  invite: ['🎉', '🎁', '👥'],
+  reward: ['🎁', '🏆', '💰'],
+  trophy: ['🥇', '🏆', '👑'],
+  search: ['🔍', '🔎'],
+  lang: ['🌐', '🌎'],
+  support: ['💬', '❓'],
+  bell: ['🔔', '📣'],
+  share: ['🛫', '🔗', '📤'],
+  affiliate: ['💼', '🤝', '📈'],
+  chart: ['📈', '📊', '↗️'],
+  success: ['✔️', '✅'],
+  pending: ['⌛', '⏳'],
+  fire: ['⚡️', '⚡', '🔥'],
+  rocket: ['🚀', '🔥', '⚡'],
+  guide: ['💡', '📖'],
+  details: ['ℹ️', '📋'],
+  back: ['⬅️', '◀️'],
+  user: ['📇', '👥', '👤'],
+  lock: ['🔒', '🔐'],
+  unlock: ['🆓', '🔓', '🎉'],
+  cancel: ['❌', '✖️'],
 };
 
 @Injectable()
@@ -126,7 +179,6 @@ export class BotEmojiService implements OnModuleInit {
             if (rawEmoji && !nextMap.has(rawEmoji)) {
               nextMap.set(rawEmoji, s.customEmojiId);
             }
-            // Also index without variation selector (\uFE0F) for reliable lookup
             const stripped = rawEmoji.replace(/\uFE0F/g, '');
             if (stripped && !nextMap.has(stripped)) {
               nextMap.set(stripped, s.customEmojiId);
@@ -146,8 +198,10 @@ export class BotEmojiService implements OnModuleInit {
     }
   }
 
-  /** Resolve a custom_emoji_id for a UI role (from FinanceEmoji, NewsEmoji, hubxemoji). */
+  /** Resolve custom_emoji_id: prefers visually verified animated IDs, else pack lookup. */
   resolveId(role: UiEmojiRole): string | null {
+    const pinned = PINNED_ANIMATED_IDS[role];
+    if (pinned) return pinned;
     const candidates = ROLE_CANDIDATES[role] || [];
     for (const c of candidates) {
       const hit = this.unicodeToId.get(c) || this.unicodeToId.get(c.replace(/\uFE0F/g, ''));

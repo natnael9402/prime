@@ -8,6 +8,7 @@ import { StockAlertsModule } from '../stock-alerts/stock-alerts.module';
 import { HomeCardsModule } from '../home-cards/home-cards.module';
 import { RewardsModule } from '../rewards/rewards.module';
 import { UsersModule } from '../users/users.module';
+import { SupplierModule } from '../supplier/supplier.module';
 import { BotStateService } from './bot-state.service';
 import { BotI18nService } from './bot-i18n.service';
 import { BotEmojiService } from './bot-emoji.service';
@@ -28,6 +29,7 @@ import { BotController } from './bot.controller';
     HomeCardsModule,
     RewardsModule,
     UsersModule,
+    SupplierModule,
   ],
   controllers: [BotController],
   providers: [

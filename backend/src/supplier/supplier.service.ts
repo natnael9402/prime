@@ -1,16 +1,20 @@
 import { Injectable, BadRequestException, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { SettingsService } from '../settings/settings.service';
 import { CacheService } from '../infra/cache.service';
 import { ProductTranslations } from '../products/translation.service';
 import { StockAlertsService } from '../stock-alerts/stock-alerts.service';
-import { SupplierAdapter, buildSupplierRegistry } from './adapters';
+import { TelegramService, escapeHtml } from '../telegram/telegram.service';
+import { SupplierAdapter, buildSupplierRegistry, isSupplierBacked, valueToItems } from './adapters';
 
 /** How often local stock mirrors the suppliers (minutes). 0 disables. */
 const DEFAULT_SYNC_INTERVAL_MIN = 5;
 /** Minimum gap between any two syncs — failures can't spam the suppliers. */
 const SYNC_DEBOUNCE_MS = 60_000;
+/** Poll pending async supplier orders (e.g. DanteHub manual fulfillment) every 30s. */
+const PENDING_ORDER_POLL_MS = 30_000;
 
 export interface ImportProductDto {
   supplier?: string;
@@ -37,7 +41,9 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(SupplierService.name);
   private readonly registry: Record<string, SupplierAdapter>;
   private syncTimer: NodeJS.Timeout | null = null;
+  private orderPollTimer: NodeJS.Timeout | null = null;
   private syncing = false;
+  private pollingOrders = false;
   private lastSyncAt = 0;
 
   constructor(
@@ -46,6 +52,7 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
     private settings: SettingsService,
     private cache: CacheService,
     private stockAlerts: StockAlertsService,
+    private telegram: TelegramService,
   ) {
     this.registry = buildSupplierRegistry(config);
   }
@@ -57,6 +64,13 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
       this.logger.warn('No supplier key configured — automatic stock sync disabled.');
       return;
     }
+
+    // Only one instance (kv-bot or single-container api) should run periodic reconciliation
+    if ((this.config.get<string>('TELEGRAM_ENABLE_BOT') || 'true') !== 'false') {
+      this.orderPollTimer = setInterval(() => void this.reconcileProcessingOrders(), PENDING_ORDER_POLL_MS);
+      this.orderPollTimer.unref();
+    }
+
     if (!Number.isFinite(minutes) || minutes <= 0) {
       this.logger.log('Automatic supplier stock sync disabled (SUPPLIER_SYNC_INTERVAL_MINUTES<=0).');
       return;
@@ -70,6 +84,7 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
 
   onModuleDestroy() {
     if (this.syncTimer) clearInterval(this.syncTimer);
+    if (this.orderPollTimer) clearInterval(this.orderPollTimer);
   }
 
   /** Debounced sync trigger — safe to call from anywhere (e.g. after a 409). */
@@ -251,6 +266,36 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
     return product;
   }
 
+  /** Refresh live stock & pricing for a single supplier-backed product. */
+  async refreshProductStock(productId: string) {
+    const lp = await this.prisma.product.findUnique({
+      where: { id: productId },
+      select: { id: true, source: true, supplierProductId: true, stock: true },
+    });
+    if (!lp || !lp.supplierProductId || !isSupplierBacked(lp.source)) {
+      return null;
+    }
+    const a = this.adapter(lp.source);
+    if (!a.configured) return null;
+    try {
+      const sp = await a.getProduct(String(lp.supplierProductId));
+      const newStock = sp.unlimited ? 9999 : sp.stock;
+      await this.prisma.product.update({
+        where: { id: lp.id },
+        data: { stock: newStock, costUSD: sp.priceUSD },
+      });
+      await this.settings.applyPricing(lp.id);
+      await this.cache.invalidatePattern('catalog:');
+      if ((lp.stock ?? 0) <= 0 && newStock > 0) {
+        this.stockAlerts.notifyRestock(lp.id).catch(() => undefined);
+      }
+      return { stock: newStock, updatedAt: new Date() };
+    } catch (err: any) {
+      this.logger.warn(`Single-product refresh failed (${productId}): ${err?.message}`);
+      return null;
+    }
+  }
+
   /** Sync one supplier (code given) or every configured supplier. */
   async syncStock(code?: string) {
     if (code) return this.syncSupplier(this.adapter(code));
@@ -297,10 +342,11 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Fulfill one PAID order with its supplier, routed by product.source.
-   * Retries NEVER buy twice: when supplierOrderId exists we fetch the
-   * original purchase instead of creating a new one.
+   * Retries NEVER buy twice: supplierOrderId is persisted immediately and reused
+   * on retries. Supports both instant suppliers (HubX/GeminiPro) and async
+   * manual/webhook suppliers (DanteHub).
    */
-  async fulfillOrder(orderId: string): Promise<{ items: string[]; supplierOrderId: string }> {
+  async fulfillOrder(orderId: string): Promise<{ items: string[]; supplierOrderId: string; processing?: boolean }> {
     const order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: { product: true },
@@ -310,46 +356,212 @@ export class SupplierService implements OnModuleInit, OnModuleDestroy {
       throw new BadRequestException('Order product is not supplier-backed');
     }
     const a = this.adapter(order.product.source || 'HUBX');
+    const wasProcessing = order.fulfillmentStatus === 'PROCESSING';
 
-    await this.prisma.order.update({
-      where: { id: order.id },
-      data: { fulfillmentStatus: 'PENDING', fulfillmentError: null },
-    });
+    if (!wasProcessing) {
+      await this.prisma.order.update({
+        where: { id: order.id },
+        data: { fulfillmentStatus: 'PENDING', fulfillmentError: null },
+      });
+    }
 
     try {
       const result = order.supplierOrderId
         ? await a.getOrder(order.supplierOrderId)
         : await a.createOrder(order.product.supplierProductId, order.quantity || 1, order.txRef);
 
+      // Persist supplierOrderId immediately so retries never place a second order
+      if (result.supplierOrderId && result.supplierOrderId !== order.supplierOrderId) {
+        await this.prisma.order.update({
+          where: { id: order.id },
+          data: { supplierOrderId: result.supplierOrderId },
+        });
+      }
+
+      if (['cancelled', 'failed', 'refunded'].includes((result.status || '').toLowerCase())) {
+        throw new BadRequestException(`${a.label} order ${result.supplierOrderId} was ${result.status}`);
+      }
+
       if (!result.items.length) {
+        // DanteHub orders frequently await manual fulfillment (status = 'processing')
+        if (a.code === 'DANTEHUB' && ['processing', 'pending_payment'].includes((result.status || '').toLowerCase())) {
+          await this.prisma.order.update({
+            where: { id: order.id },
+            data: {
+              fulfillmentStatus: 'PROCESSING',
+              supplierOrderId: result.supplierOrderId || order.supplierOrderId,
+              fulfillmentError: null,
+            },
+          });
+          if (!wasProcessing && order.telegramUserId) {
+            void this.telegram.sendMessage(
+              order.telegramUserId,
+              `⏳ <b>Payment Confirmed — Preparing Your Order</b>\n\n` +
+                `📦 <b>${escapeHtml(order.product.name)}</b>\n` +
+                `🧾 <code>${escapeHtml(order.txRef)}</code>\n\n` +
+                `Your account is being prepared and will arrive right here automatically as soon as it's ready.`,
+              {
+                inline_keyboard: [[{ text: '📦 View Order', callback_data: `o:${order.id}`, style: 'primary' }]],
+              },
+            );
+          }
+          return { items: [], supplierOrderId: result.supplierOrderId, processing: true };
+        }
+
         throw new BadRequestException(`${a.label} order ${result.supplierOrderId} has no delivered items yet`);
       }
 
-      await this.prisma.order.update({
-        where: { id: order.id },
-        data: {
-          fulfillmentStatus: 'DELIVERED',
-          supplierOrderId: result.supplierOrderId || order.supplierOrderId,
-          licenseKey: result.items.join('\n'),
-          fulfillmentError: null,
-        },
-      });
-
-      // Decrement local stock mirror
-      await this.prisma.product.update({
-        where: { id: order.productId },
-        data: { stock: { decrement: order.quantity || 1 } },
-      });
-
-      return { items: result.items, supplierOrderId: result.supplierOrderId };
+      return this.completeDeliveredOrder(order, result.items, result.supplierOrderId);
     } catch (err: any) {
       await this.prisma.order.update({
         where: { id: order.id },
         data: { fulfillmentStatus: 'FAILED', fulfillmentError: err.message },
       });
-      // A failure (esp. 409 out-of-stock) means local stock is stale — resync now
       this.requestSync('fulfillment-failed');
       throw err;
     }
+  }
+
+  private async completeDeliveredOrder(order: any, items: string[], supplierOrderId: string) {
+    await this.prisma.order.update({
+      where: { id: order.id },
+      data: {
+        fulfillmentStatus: 'DELIVERED',
+        supplierOrderId: supplierOrderId || order.supplierOrderId,
+        licenseKey: items.join('\n'),
+        fulfillmentError: null,
+      },
+    });
+
+    // Decrement local stock mirror (skip if unlimited sentinel)
+    if ((order.product?.stock ?? 0) < 9000) {
+      await this.prisma.product.update({
+        where: { id: order.productId },
+        data: { stock: { decrement: order.quantity || 1 } },
+      });
+    }
+
+    return { items, supplierOrderId };
+  }
+
+  /** Poll any PAID orders waiting on asynchronous supplier fulfillment (DanteHub). */
+  async reconcileProcessingOrders() {
+    if (this.pollingOrders) return;
+    this.pollingOrders = true;
+    try {
+      const pending = await this.prisma.order.findMany({
+        where: {
+          status: 'PAID',
+          fulfillmentStatus: 'PROCESSING',
+          supplierOrderId: { not: null },
+        },
+        include: { product: { include: { activationGuide: true } } },
+        take: 25,
+      });
+
+      for (const order of pending) {
+        try {
+          const a = this.adapter(order.product?.source || 'DANTEHUB');
+          if (!a.configured) continue;
+          const res = await a.getOrder(order.supplierOrderId!);
+          if (res.items.length > 0 && res.status === 'delivered') {
+            await this.completeDeliveredOrder(order, res.items, res.supplierOrderId);
+            await this.telegram.notifyOrderPaid({
+              txRef: order.txRef,
+              customerName: order.customerName,
+              amount: order.amount,
+              currency: order.currency,
+              licenseKey: res.items.join('\n'),
+              telegramUserId: order.telegramUserId,
+              id: order.id,
+              product: order.product ? { name: order.product.name, emojiId: order.product.emojiId } : null,
+            });
+          } else if (['cancelled', 'failed', 'refunded'].includes((res.status || '').toLowerCase())) {
+            await this.prisma.order.update({
+              where: { id: order.id },
+              data: { fulfillmentStatus: 'FAILED', fulfillmentError: `Supplier ${res.status}` },
+            });
+            void this.telegram.notifyAdmin(
+              `⚠️ <b>Supplier Order ${escapeHtml(res.status)}</b>\n` +
+                `📦 ${escapeHtml(order.product?.name || '-')}\n` +
+                `🧾 <code>${escapeHtml(order.txRef)}</code>`,
+            );
+          }
+        } catch (err: any) {
+          this.logger.warn(`Reconcile order ${order.txRef} failed: ${err?.message}`);
+        }
+      }
+    } finally {
+      this.pollingOrders = false;
+    }
+  }
+
+  /** Signed webhook receiver for DanteHub (`order.delivered` / `order.cancelled`). */
+  async handleDanteHubWebhook(payload: any, rawBody: Buffer | string | undefined, signature: string | undefined) {
+    const secret = (this.config.get<string>('DANTEHUB_WEBHOOK_SECRET') || '').trim();
+    if (secret) {
+      if (!signature || !/^[0-9a-f]{64}$/i.test(signature) || !rawBody) {
+        throw new BadRequestException('Invalid DanteHub signature');
+      }
+      const expected = crypto.createHmac('sha256', secret).update(rawBody).digest();
+      const received = Buffer.from(signature, 'hex');
+      if (expected.length !== received.length || !crypto.timingSafeEqual(expected, received)) {
+        throw new BadRequestException('Invalid DanteHub signature');
+      }
+    }
+
+    const event = String(payload?.event || '');
+    if (event === 'wallet.low_balance') {
+      void this.telegram.notifyAdmin(
+        `⚠️ <b>DanteHub Wallet Low Balance</b>\nBalance: <b>${payload?.balance} ${payload?.currency || 'USDT'}</b>`,
+      );
+      return { ok: true };
+    }
+
+    const dOrder = payload?.order;
+    if (!dOrder?.order_id && !dOrder?.ref) return { ok: true };
+
+    const order = await this.prisma.order.findFirst({
+      where: {
+        OR: [
+          ...(dOrder.order_id ? [{ supplierOrderId: String(dOrder.order_id) }] : []),
+          ...(dOrder.ref ? [{ txRef: String(dOrder.ref) }] : []),
+        ],
+      },
+      include: { product: { include: { activationGuide: true } } },
+    });
+    if (!order) return { ok: true };
+
+    if (event === 'order.delivered') {
+      if (order.fulfillmentStatus === 'DELIVERED' && order.licenseKey) return { ok: true };
+      const items = valueToItems(dOrder.delivery);
+      if (items.length > 0) {
+        await this.completeDeliveredOrder(order, items, String(dOrder.order_id || order.supplierOrderId || ''));
+        await this.telegram.notifyOrderPaid({
+          txRef: order.txRef,
+          customerName: order.customerName,
+          amount: order.amount,
+          currency: order.currency,
+          licenseKey: items.join('\n'),
+          telegramUserId: order.telegramUserId,
+          id: order.id,
+          product: order.product ? { name: order.product.name, emojiId: order.product.emojiId } : null,
+        });
+      }
+      return { ok: true };
+    }
+
+    if (event === 'order.cancelled') {
+      await this.prisma.order.update({
+        where: { id: order.id },
+        data: { fulfillmentStatus: 'FAILED', fulfillmentError: 'Cancelled/refunded by DanteHub' },
+      });
+      void this.telegram.notifyAdmin(
+        `⚠️ <b>DanteHub Order Cancelled</b>\n📦 ${escapeHtml(order.product?.name || '-')}\n🧾 <code>${escapeHtml(order.txRef)}</code>`,
+      );
+      return { ok: true };
+    }
+
+    return { ok: true };
   }
 }

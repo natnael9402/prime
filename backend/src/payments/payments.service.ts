@@ -7,6 +7,7 @@ import { LicensesService } from '../licenses/licenses.service';
 import { AffiliatesService } from '../affiliates/affiliates.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { SupplierService } from '../supplier/supplier.service';
+import { isSupplierBacked } from '../supplier/adapters';
 import { FulfillmentQueue } from './fulfillment.queue';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -145,7 +146,7 @@ export class PaymentsService {
       if (product.stock <= 0) throw new BadRequestException(`"${product.name}" አልቋል (Out of stock)`);
       // Supplier-backed products (HubX/GeminiPro): supplier is stock-authoritative
       // at fulfillment time, so no local upper-limit. Local key pools are strict.
-      const supplierBacked = ['HUBX', 'GEMINIPRO'].includes(product.source || '');
+      const supplierBacked = isSupplierBacked(product.source);
       if (!supplierBacked && product.stock < qty) {
         throw new BadRequestException(`"${product.name}" ${product.stock} ብቻ ነው ያለው (Only ${product.stock} left)`);
       }
@@ -363,8 +364,9 @@ export class PaymentsService {
     if (order.status !== 'PAID') return null; // never deliver unpaid goods
     if (order.fulfillmentStatus === 'DELIVERED' && order.licenseKey) return order;
 
-    if (order.product?.supplierProductId && ['HUBX', 'GEMINIPRO'].includes(order.product?.source || '')) {
-      await this.supplierService.fulfillOrder(order.id); // sets licenseKey + DELIVERED, throws on failure
+    if (order.product?.supplierProductId && isSupplierBacked(order.product?.source)) {
+      const res = await this.supplierService.fulfillOrder(order.id);
+      if (res?.processing) return null; // async delivery (DanteHub) notifies when delivered
     } else {
       const key = await this.licensesService.allocateKeyForOrder(
         order.productId,

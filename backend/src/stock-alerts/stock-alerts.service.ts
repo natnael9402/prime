@@ -60,6 +60,42 @@ export class StockAlertsService {
     return { subscribed: true, id: alert.id };
   }
 
+  async isSubscribed(productId: string, telegramUserId: string): Promise<boolean> {
+    if (!telegramUserId) return false;
+    const hit = await this.prisma.stockAlert.findUnique({
+      where: { productId_telegramUserId: { productId, telegramUserId: String(telegramUserId) } },
+      select: { id: true },
+    });
+    return !!hit;
+  }
+
+  async toggle(dto: {
+    productId: string;
+    telegramUserId: string;
+    username?: string;
+    firstName?: string;
+  }): Promise<{ subscribed: boolean }> {
+    const telegramUserId = String(dto.telegramUserId || '').trim();
+    if (!telegramUserId || !/^\d+$/.test(telegramUserId)) {
+      throw new BadRequestException('Telegram account required');
+    }
+    const product = await this.prisma.product.findFirst({
+      where: { OR: [{ id: dto.productId }, { slug: dto.productId }] },
+      select: { id: true },
+    });
+    if (!product) throw new NotFoundException('Product not found');
+
+    const existing = await this.prisma.stockAlert.findUnique({
+      where: { productId_telegramUserId: { productId: product.id, telegramUserId } },
+    });
+    if (existing) {
+      await this.prisma.stockAlert.delete({ where: { id: existing.id } });
+      return { subscribed: false };
+    }
+    await this.subscribe(dto);
+    return { subscribed: true };
+  }
+
   /** Admin: everyone waiting on a restock, newest first. */
   async adminList() {
     return this.prisma.stockAlert.findMany({

@@ -95,7 +95,9 @@ export default function SupplierImportModal({
     badge: 'NEW',
     bannerUrl: supplierImage,
     shortDesc: `${supplierProduct.name} — instant digital delivery`,
-    description: `${supplierProduct.name}. Premium digital product with fast delivery. After your payment is confirmed, your license or account details arrive instantly.`,
+    description:
+      supplierProduct.description ||
+      `${supplierProduct.name}. Premium digital product with fast delivery. After your payment is confirmed, your license or account details arrive instantly.`,
     featuresStr: 'Original digital product\nInstant delivery after payment\nFull customer support',
     requirementsStr: 'Internet connection required',
     activationStepsStr: 'Open the delivered account or license key\nUse it on the official website or app',

@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import AdminNavbar from '@/components/AdminNavbar';
 import { api } from '@/lib/api';
 import {
   Layers, RefreshCw, Wallet, Package, CheckCircle2, AlertTriangle,
-  Download, FlaskConical, Zap,
+  Download, FlaskConical, Zap, Search, ChevronLeft, ChevronRight,
 } from 'lucide-react';
 import SupplierImportModal from '@/components/SupplierImportModal';
 
@@ -20,6 +20,9 @@ export default function AdminSupplierPage() {
   const [error, setError] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [syncing, setSyncing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [page, setPage] = useState(1);
   const [importForm, setImportForm] = useState<{
     supplierProductId: string; categoryId: string; margin: string; discount: string;
   }>({ supplierProductId: '', categoryId: '', margin: '', discount: '' });
@@ -82,6 +85,27 @@ export default function AdminSupplierPage() {
 
   const activeInfo = suppliers.find((s) => s.code === activeSupplier);
 
+  const filteredProducts = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return products.filter((p) => {
+      if (inStockOnly && !p.unlimited && (p.stock || 0) <= 0) return false;
+      if (!q) return true;
+      return (
+        String(p.name || '').toLowerCase().includes(q) ||
+        String(p.slug || '').toLowerCase().includes(q) ||
+        String(p.description || '').toLowerCase().includes(q)
+      );
+    });
+  }, [products, searchQuery, inStockOnly]);
+
+  const PAGE_SIZE = 50;
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pagedProducts = useMemo(
+    () => filteredProducts.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE),
+    [filteredProducts, safePage],
+  );
+
   return (
     <div className="min-h-screen flex flex-col">
       <AdminNavbar />
@@ -135,7 +159,9 @@ export default function AdminSupplierPage() {
               <p className="text-[10px] text-slate-500 leading-snug">
                 {activeSupplier === 'GEMINIPRO'
                   ? 'Set GEMINIPRO_API_KEY="rsp_live_…" in backend/.env and restart the backend.'
-                  : 'Get a free key: HubX bot → Reseller API → Get Sandbox Key, then set SUPPLIER_API_KEY in backend/.env'}
+                  : activeSupplier === 'DANTEHUB'
+                    ? 'Set DANTEHUB_API_KEY="dh_live_…" in backend/.env and restart the backend.'
+                    : 'Get a free key: HubX bot → Reseller API → Get Sandbox Key, then set SUPPLIER_API_KEY in backend/.env'}
               </p>
             )}
           </div>
@@ -225,23 +251,53 @@ export default function AdminSupplierPage() {
             <p className="text-sm font-bold text-rose-300">{error}</p>
           </div>
         ) : status?.configured ? (
-          <div className="glass rounded-3xl overflow-hidden fade-up">
-            <div className="overflow-x-auto">
-              <table className="w-full table-base">
-                <thead>
-                  <tr>
-                    <th>Product</th>
-                    <th>Cost (USD)</th>
-                    <th>Sell Price (ETB)</th>
-                    <th>Stock</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {products.length === 0 && (
-                    <tr><td colSpan={5} className="text-center text-slate-500 py-8">No supplier products</td></tr>
-                  )}
-                  {products.map((p) => (
+          <div className="space-y-3 fade-up">
+            <div className="glass rounded-2xl p-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setPage(1);
+                  }}
+                  placeholder={`Search ${products.length.toLocaleString()} ${activeInfo?.label || ''} products…`}
+                  className="input-dark w-full rounded-xl pl-9 pr-3 py-2 text-xs"
+                />
+              </div>
+              <label className="flex items-center gap-2 text-xs text-slate-300 font-bold cursor-pointer px-2">
+                <input
+                  type="checkbox"
+                  checked={inStockOnly}
+                  onChange={(e) => {
+                    setInStockOnly(e.target.checked);
+                    setPage(1);
+                  }}
+                />
+                In stock only
+              </label>
+              <span className="text-[11px] font-bold text-slate-400 px-2">
+                {filteredProducts.length.toLocaleString()} match{filteredProducts.length === 1 ? '' : 'es'}
+              </span>
+            </div>
+
+            <div className="glass rounded-3xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full table-base">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Cost (USD)</th>
+                      <th>Sell Price (ETB)</th>
+                      <th>Stock</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pagedProducts.length === 0 && (
+                      <tr><td colSpan={5} className="text-center text-slate-500 py-8">No supplier products match</td></tr>
+                    )}
+                    {pagedProducts.map((p) => (
                     <tr key={p.id}>
                       <td>
                         <div className="font-bold text-slate-100">{p.name}</div>
@@ -277,7 +333,29 @@ export default function AdminSupplierPage() {
                 </tbody>
               </table>
             </div>
+            {totalPages > 1 && (
+              <div className="px-4 py-3 border-t border-white/5 flex items-center justify-between text-xs text-slate-400">
+                <span>Page {safePage} of {totalPages}</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={safePage <= 1}
+                    onClick={() => setPage((x) => Math.max(1, x - 1))}
+                    className="btn-ghost px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 disabled:opacity-40"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" /> Prev
+                  </button>
+                  <button
+                    disabled={safePage >= totalPages}
+                    onClick={() => setPage((x) => Math.min(totalPages, x + 1))}
+                    className="btn-ghost px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 disabled:opacity-40"
+                  >
+                    Next <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
+        </div>
         ) : (
           <div className="fade-up glass rounded-3xl p-10 text-center space-y-3">
             <Package className="w-10 h-10 text-slate-600 mx-auto" />
@@ -285,6 +363,8 @@ export default function AdminSupplierPage() {
             <p className="text-[11px] text-slate-500 max-w-md mx-auto leading-relaxed">
               {activeSupplier === 'GEMINIPRO' ? (
                 <>Add <code className="text-amber-400">GEMINIPRO_API_KEY="rsp_live_…"</code> to backend/.env and restart the backend — this page lights up.</>
+              ) : activeSupplier === 'DANTEHUB' ? (
+                <>Add <code className="text-amber-400">DANTEHUB_API_KEY="dh_live_…"</code> to backend/.env and restart the backend — this page lights up.</>
               ) : (
                 <>1. Open the HubX Telegram bot → Reseller API → Get Sandbox Key (free).<br />
                 2. Add <code className="text-amber-400">SUPPLIER_API_KEY="rsk_test_…"</code> to backend/.env.<br />
